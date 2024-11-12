@@ -121,17 +121,14 @@ $result = $conn->query($query);
 
                     <h6 class="mb-4">Secure Payment</h6>
 
-                    <div class="payment-methods mb-4 text-center">
-                        <img src="../assets/images/gcash.png" alt="GCash" class="img-fluid me-3"
-                            style="max-height: 40px;">
-                        <img src="../assets/images/grab_pay.png" alt="GrabPay" class="img-fluid me-3"
-                            style="max-height: 40px;">
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="quantity" placeholder="Enter quantity" min="1" value="1" required>
                     </div>
 
                     <div class="mb-3">
                         <label for="amount" class="form-label">Amount (PHP)</label>
-                        <input type="number" class="form-control" id="amount" placeholder="Enter amount (e.g. 100)"
-                            min="1" step="1" required>
+                        <input type="number" class="form-control" id="amount" placeholder="Enter amount (e.g. 100)" min="1" step="1" required readonly>
                     </div>
 
                     <div id="error" class="alert alert-danger d-none"></div>
@@ -172,16 +169,19 @@ $result = $conn->query($query);
         }
 
         async function processPayment() {
-            const amount = document.getElementById('amount').value;
+            const quantity = document.getElementById('quantity').value;
             const itemId = document.getElementById('itemId').value;
+            const amountPerItem = 100;
+            const totalAmount = quantity * amountPerItem;
+            document.getElementById('amount').value = totalAmount;
             const errorDiv = document.getElementById('error');
             const payButton = document.getElementById('payButton');
 
             errorDiv.classList.add('d-none');
             errorDiv.textContent = '';
 
-            if (!amount || amount <= 0) {
-                errorDiv.textContent = 'Please enter a valid amount';
+            if (!quantity || quantity <= 0) {
+                errorDiv.textContent = 'Please enter a valid quantity';
                 errorDiv.classList.remove('d-none');
                 return;
             }
@@ -197,8 +197,9 @@ $result = $conn->query($query);
                         'Accept': 'application/json'
                     },
                     body: JSON.stringify({
-                        amount: parseInt(amount),
-                        itemId: itemId
+                        amount: amountPerItem,
+                        itemId: itemId,
+                        quantity: quantity
                     })
                 });
 

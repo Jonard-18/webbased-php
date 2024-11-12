@@ -16,6 +16,7 @@ try {
     }
     
     $amount = (int)$input['amount'];
+    $quantity = (int)$input['quantity'];
     
     if ($amount <= 0) {
         throw new Exception('Amount must be greater than 0');
@@ -29,7 +30,7 @@ try {
             'attributes' => [
                 'line_items' => [[
                     'name' => 'Payment',
-                    'quantity' => 1,
+                    'quantity' => $quantity,
                     'amount' => $amount * 100, // Convert to cents
                     'currency' => 'PHP',
                 ]],
@@ -38,8 +39,8 @@ try {
                     'grab_pay',
                     'card'
                 ],
-                'success_url' => 'https://c283-222-127-73-6.ngrok-free.app/payment/sucess.php',
-                'cancel_url' => 'https://c283-222-127-73-6.ngrok-free.app/payment/error.php',
+                'success_url' => 'https://e5dc-222-127-73-6.ngrok-free.app/payment/sucess.php',
+                'cancel_url' => 'https://e5dc-222-127-73-6.ngrok-free.app/payment/sucess.php',
             ]
         ]
     ];
