@@ -123,12 +123,14 @@ $result = $conn->query($query);
 
                     <div class="mb-3">
                         <label for="quantity" class="form-label">Quantity</label>
-                        <input type="number" class="form-control" id="quantity" placeholder="Enter quantity" min="1" value="1" required>
+                        <input type="number" class="form-control" id="quantity" placeholder="Enter quantity" min="1"
+                            value="1" required>
                     </div>
 
                     <div class="mb-3">
                         <label for="amount" class="form-label">Amount (PHP)</label>
-                        <input type="number" class="form-control" id="amount" placeholder="Enter amount (e.g. 100)" min="1" step="1" required readonly>
+                        <input type="number" class="form-control" id="amount" placeholder="Enter amount (e.g. 100)"
+                            min="1" step="1" required readonly>
                     </div>
 
                     <div id="error" class="alert alert-danger d-none"></div>
@@ -198,7 +200,7 @@ $result = $conn->query($query);
                     },
                     body: JSON.stringify({
                         amount: amountPerItem,
-                        itemId: itemId,
+                        itemId: itemId,  // Added itemId to the payload
                         quantity: quantity
                     })
                 });

@@ -15,12 +15,31 @@ try {
         throw new Exception('Invalid amount provided');
     }
     
+    if (!isset($input['itemId'])) {
+        throw new Exception('Item ID is required');
+    }
+    
     $amount = (int)$input['amount'];
     $quantity = (int)$input['quantity'];
+    $itemId = (int)$input['itemId'];
     
     if ($amount <= 0) {
         throw new Exception('Amount must be greater than 0');
     }
+
+    // Fetch item details from database
+    require_once('../config/database.php');
+    $stmt = $conn->prepare("SELECT name FROM inventory WHERE item_id = ?");
+    $stmt->bind_param("i", $itemId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows === 0) {
+        throw new Exception('Item not found');
+    }
+    
+    $item = $result->fetch_assoc();
+    $itemName = $item['name'];
 
     // Create PayMongo payment session
     $ch = curl_init(PAYMONGO_API_URL . '/checkout_sessions');
@@ -29,7 +48,7 @@ try {
         'data' => [
             'attributes' => [
                 'line_items' => [[
-                    'name' => 'Payment',
+                    'name' => $itemName,
                     'quantity' => $quantity,
                     'amount' => $amount * 100, // Convert to cents
                     'currency' => 'PHP',
@@ -39,8 +58,8 @@ try {
                     'grab_pay',
                     'card'
                 ],
-                'success_url' => 'https://7bab-143-44-167-109.ngrok-free.app/payment/sucess.php',
-                'cancel_url' => 'https://7bab-143-44-167-109.ngrok-free.app/payment/error.php',
+                'success_url' => 'https://7773-222-127-73-6.ngrok-free.app/payment/sucess.php',
+                'cancel_url' => 'https://7773-222-127-73-6.ngrok-free.app/payment/error.php',
             ]
         ]
     ];
