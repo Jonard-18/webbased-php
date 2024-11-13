@@ -7,4 +7,4 @@ if (isset($_SESSION['user_role'])) {
     header('Location: auth/login.php');
     exit();
 }
-?>;
+?>

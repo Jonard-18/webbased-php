@@ -39,8 +39,8 @@ try {
                     'grab_pay',
                     'card'
                 ],
-                'success_url' => 'https://e5dc-222-127-73-6.ngrok-free.app/payment/sucess.php',
-                'cancel_url' => 'https://e5dc-222-127-73-6.ngrok-free.app/payment/sucess.php',
+                'success_url' => 'https://7bab-143-44-167-109.ngrok-free.app/payment/sucess.php',
+                'cancel_url' => 'https://7bab-143-44-167-109.ngrok-free.app/payment/error.php',
             ]
         ]
     ];
