@@ -1,12 +1,12 @@
 <?php
 // PayMongo API Configuration
-define('PAYMONGO_SECRET_KEY', 'sk_test_AZb3Ve2hSMuBTzWb4gbjtSP6');
+define('PAYMONGO_SECRET_KEY', 'sk_test_XhhSeNsJTpZVbwCstLAJBzso');
 define('PAYMONGO_PUBLIC_KEY', 'pk_test_dVh6Nt6QRcN8di6tjCKmynLQ');
 define('PAYMONGO_API_URL', 'https://api.paymongo.com/v1');
-define('PAYMONGO_WEBHOOK_SIG', 'your_webhook_signing_secret');
+define('PAYMONGO_WEBHOOK_SIG', 'whsk_2tF74cuP7z3GhrX2XqT7gyDg');
 
 // Environment Configuration
-define('APP_URL', 'https://your-domain.com');
+define('APP_URL', ' https://60a3-222-127-73-6.ngrok-free.app');
 define('IS_PRODUCTION', false);
 
 // Error Reporting
