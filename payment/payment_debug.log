@@ -1,0 +1,184 @@
+[2024-11-13 09:40:17] Received payment request
+Data: Array
+(
+)
+
+[2024-11-13 09:40:17] Decoded input
+Data: Array
+(
+    [amount] => 100
+    [itemId] => 4
+    [quantity] => 2
+)
+
+[2024-11-13 09:40:17] Validated input values
+Data: Array
+(
+    [amount] => 100
+    [quantity] => 2
+    [itemId] => 4
+)
+
+[2024-11-13 09:40:17] Retrieved item from database
+Data: Array
+(
+    [name] => Tablet
+)
+
+[2024-11-13 09:40:17] PayMongo request payload
+Data: Array
+(
+    [data] => Array
+        (
+            [attributes] => Array
+                (
+                    [line_items] => Array
+                        (
+                            [0] => Array
+                                (
+                                    [name] => Tablet
+                                    [quantity] => 2
+                                    [amount] => 10000
+                                    [currency] => PHP
+                                )
+
+                        )
+
+                    [payment_method_types] => Array
+                        (
+                            [0] => gcash
+                            [1] => grab_pay
+                            [2] => card
+                        )
+
+                    [success_url] =>  https://60a3-222-127-73-6.ngrok-free.app/payment/success.php
+                    [cancel_url] =>  https://60a3-222-127-73-6.ngrok-free.app/payment/error.php
+                )
+
+        )
+
+)
+
+[2024-11-13 09:40:18] PayMongo API response
+Data: Array
+(
+    [status_code] => 400
+    [response] => {"errors":[{"code":"parameter_format_invalid","detail":"cancel_url format is invalid.","source":{"pointer":"cancel_url","attribute":"cancel_url"}},{"code":"parameter_format_invalid","detail":"success_url format is invalid.","source":{"pointer":"success_url","attribute":"success_url"}}]}
+    [curl_error] => 
+)
+
+[2024-11-13 09:40:18] Payment initialization failed
+Data: Array
+(
+    [errors] => Array
+        (
+            [0] => Array
+                (
+                    [code] => parameter_format_invalid
+                    [detail] => cancel_url format is invalid.
+                    [source] => Array
+                        (
+                            [pointer] => cancel_url
+                            [attribute] => cancel_url
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [code] => parameter_format_invalid
+                    [detail] => success_url format is invalid.
+                    [source] => Array
+                        (
+                            [pointer] => success_url
+                            [attribute] => success_url
+                        )
+
+                )
+
+        )
+
+)
+
+[2024-11-13 09:40:18] Error occurred
+Data: Array
+(
+    [message] => cancel_url format is invalid.
+    [trace] => #0 {main}
+)
+
+[2024-11-13 09:42:02] Received payment request
+Data: Array
+(
+)
+
+[2024-11-13 09:42:02] Decoded input
+Data: Array
+(
+    [amount] => 100
+    [itemId] => 4
+    [quantity] => 1
+)
+
+[2024-11-13 09:42:02] Validated input values
+Data: Array
+(
+    [amount] => 100
+    [quantity] => 1
+    [itemId] => 4
+)
+
+[2024-11-13 09:42:02] Retrieved item from database
+Data: Array
+(
+    [name] => Tablet
+)
+
+[2024-11-13 09:42:02] PayMongo request payload
+Data: Array
+(
+    [data] => Array
+        (
+            [attributes] => Array
+                (
+                    [line_items] => Array
+                        (
+                            [0] => Array
+                                (
+                                    [name] => Tablet
+                                    [quantity] => 1
+                                    [amount] => 10000
+                                    [currency] => PHP
+                                )
+
+                        )
+
+                    [payment_method_types] => Array
+                        (
+                            [0] => gcash
+                            [1] => grab_pay
+                            [2] => card
+                        )
+
+                    [success_url] => https://60a3-222-127-73-6.ngrok-free.app/payment/success.php
+                    [cancel_url] => https://60a3-222-127-73-6.ngrok-free.app/payment/error.php
+                )
+
+        )
+
+)
+
+[2024-11-13 09:42:03] PayMongo API response
+Data: Array
+(
+    [status_code] => 200
+    [response] => {"data":{"id":"cs_JV6RP1XxvhHGxodNsKKKtjPj","type":"checkout_session","attributes":{"billing":{"address":{"city":null,"country":null,"line1":null,"line2":null,"postal_code":null,"state":null},"email":null,"name":null,"phone":null},"billing_information_fields_editable":"enabled","cancel_url":"https://60a3-222-127-73-6.ngrok-free.app/payment/error.php","checkout_url":"https://checkout.paymongo.com/cs_JV6RP1XxvhHGxodNsKKKtjPj_client_gfgDPKVvMWBhNWdodRjidoMS#cGtfdGVzdF9kVmg2TnQ2UVJjTjhkaTZ0akNLbXluTFE=","client_key":"cs_JV6RP1XxvhHGxodNsKKKtjPj_client_gfgDPKVvMWBhNWdodRjidoMS","customer_email":null,"description":null,"line_items":[{"amount":10000,"currency":"PHP","description":null,"images":[],"name":"Tablet","quantity":1}],"livemode":false,"merchant":"Kachar","payments":[],"payment_intent":{"id":"pi_GvVDJzfCqP46rmN5sGWMA286","type":"payment_intent","attributes":{"amount":10000,"capture_type":"automatic","client_key":"pi_GvVDJzfCqP46rmN5sGWMA286_client_han7A8PcKWexcmCvjBAkjQ56","currency":"PHP","description":null,"livemode":false,"original_amount":10000,"statement_descriptor":"Kachar","status":"awaiting_payment_method","last_payment_error":null,"payment_method_allowed":["gcash","grab_pay","card"],"payments":[],"next_action":null,"payment_method_options":{"card":{"request_three_d_secure":"any"}},"metadata":null,"setup_future_usage":null,"created_at":1731487336,"updated_at":1731487336}},"payment_method_types":["gcash","grab_pay","card"],"reference_number":null,"send_email_receipt":false,"show_description":false,"show_line_items":true,"status":"active","success_url":"https://60a3-222-127-73-6.ngrok-free.app/payment/success.php","created_at":1731487336,"updated_at":1731487336,"metadata":null}}}
+    [curl_error] => 
+)
+
+[2024-11-13 09:42:03] Payment session created successfully
+Data: Array
+(
+    [checkout_url] => https://checkout.paymongo.com/cs_JV6RP1XxvhHGxodNsKKKtjPj_client_gfgDPKVvMWBhNWdodRjidoMS#cGtfdGVzdF9kVmg2TnQ2UVJjTjhkaTZ0akNLbXluTFE=
+)
+
