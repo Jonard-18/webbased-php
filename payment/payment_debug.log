@@ -1,0 +1,83 @@
+[2024-11-15 15:58:14] Received payment request
+Data: Array
+(
+)
+
+[2024-11-15 15:58:14] Decoded input
+Data: Array
+(
+    [amount] => 100
+    [itemId] => 4
+    [quantity] => 2
+)
+
+[2024-11-15 15:58:14] Validated input values
+Data: Array
+(
+    [amount] => 100
+    [quantity] => 2
+    [itemId] => 4
+)
+
+[2024-11-15 15:58:14] Retrieved item from database
+Data: Array
+(
+    [name] => Tablet
+    [stock_quantity] => 30
+)
+
+[2024-11-15 15:58:14] PayMongo request payload
+Data: Array
+(
+    [data] => Array
+        (
+            [attributes] => Array
+                (
+                    [line_items] => Array
+                        (
+                            [0] => Array
+                                (
+                                    [name] => Tablet
+                                    [quantity] => 2
+                                    [amount] => 10000
+                                    [currency] => PHP
+                                )
+
+                        )
+
+                    [payment_method_types] => Array
+                        (
+                            [0] => gcash
+                            [1] => grab_pay
+                            [2] => card
+                        )
+
+                    [success_url] => https://0039-222-127-73-6.ngrok-free.app/payment/success.php
+                    [cancel_url] => https://0039-222-127-73-6.ngrok-free.app/payment/error.php
+                )
+
+        )
+
+)
+
+[2024-11-15 15:58:15] PayMongo API response
+Data: Array
+(
+    [status_code] => 200
+    [response] => {"data":{"id":"cs_oJ42jPrw28mACJJWSiS2Qjwx","type":"checkout_session","attributes":{"billing":{"address":{"city":null,"country":null,"line1":null,"line2":null,"postal_code":null,"state":null},"email":null,"name":null,"phone":null},"billing_information_fields_editable":"enabled","cancel_url":"https://0039-222-127-73-6.ngrok-free.app/payment/error.php","checkout_url":"https://checkout.paymongo.com/cs_oJ42jPrw28mACJJWSiS2Qjwx_client_8mH7Z3QKcHcCWM19K4xEDyhA#cGtfdGVzdF9kVmg2TnQ2UVJjTjhkaTZ0akNLbXluTFE=","client_key":"cs_oJ42jPrw28mACJJWSiS2Qjwx_client_8mH7Z3QKcHcCWM19K4xEDyhA","customer_email":null,"description":null,"line_items":[{"amount":10000,"currency":"PHP","description":null,"images":[],"name":"Tablet","quantity":2}],"livemode":false,"merchant":"Kachar","payments":[],"payment_intent":{"id":"pi_e5ekeCxibZcU8kMnVa8Ni3D5","type":"payment_intent","attributes":{"amount":20000,"capture_type":"automatic","client_key":"pi_e5ekeCxibZcU8kMnVa8Ni3D5_client_bksaVBuPCdxweqtTuX7FJuA5","currency":"PHP","description":null,"livemode":false,"original_amount":20000,"statement_descriptor":"Kachar","status":"awaiting_payment_method","last_payment_error":null,"payment_method_allowed":["grab_pay","gcash","card"],"payments":[],"next_action":null,"payment_method_options":{"card":{"request_three_d_secure":"any"}},"metadata":null,"setup_future_usage":null,"created_at":1731682695,"updated_at":1731682695}},"payment_method_types":["card","grab_pay","gcash"],"reference_number":null,"send_email_receipt":false,"show_description":false,"show_line_items":true,"status":"active","success_url":"https://0039-222-127-73-6.ngrok-free.app/payment/success.php","created_at":1731682695,"updated_at":1731682695,"metadata":null}}}
+    [curl_error] => 
+)
+
+[2024-11-15 15:58:15] Payment session created successfully
+Data: Array
+(
+    [checkout_url] => https://checkout.paymongo.com/cs_oJ42jPrw28mACJJWSiS2Qjwx_client_8mH7Z3QKcHcCWM19K4xEDyhA#cGtfdGVzdF9kVmg2TnQ2UVJjTjhkaTZ0akNLbXluTFE=
+)
+
+[2024-11-15 15:58:15] Inventory quantity updated successfully
+Data: Array
+(
+    [itemId] => 4
+    [quantity_subtracted] => 2
+)
+

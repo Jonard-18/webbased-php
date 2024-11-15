@@ -52,7 +52,7 @@ try {
 
     // Fetch item details from database
     require_once('../config/database.php');
-    $stmt = $conn->prepare("SELECT name FROM inventory WHERE item_id = ?");
+    $stmt = $conn->prepare("SELECT name, quantity AS stock_quantity FROM inventory WHERE item_id = ?");
     $stmt->bind_param("i", $itemId);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -64,6 +64,18 @@ try {
     
     $item = $result->fetch_assoc();
     $itemName = $item['name'];
+    $stockQuantity = (int)$item['stock_quantity'];
+
+    // Check if there is enough stock
+    if ($stockQuantity < $quantity) {
+        logDebug('Insufficient stock for item', [
+            'itemId' => $itemId,
+            'requested_quantity' => $quantity,
+            'available_quantity' => $stockQuantity
+        ]);
+        throw new Exception('Insufficient stock');
+    }
+
     logDebug('Retrieved item from database', $item);
 
     // Create PayMongo payload
@@ -133,6 +145,22 @@ try {
     logDebug('Payment session created successfully', [
         'checkout_url' => $responseData['data']['attributes']['checkout_url']
     ]);
+
+    // Update inventory quantity
+    $stmt = $conn->prepare("UPDATE inventory SET quantity = quantity - ? WHERE item_id = ?");
+    $stmt->bind_param("ii", $quantity, $itemId);
+
+    if ($stmt->execute()) {
+        logDebug('Inventory quantity updated successfully', [
+            'itemId' => $itemId,
+            'quantity_subtracted' => $quantity
+        ]);
+    } else {
+        logDebug('Failed to update inventory quantity', [
+            'itemId' => $itemId,
+            'error' => $stmt->error
+        ]);
+    }
 
     // Echo the result for debugging
     echo json_encode([
