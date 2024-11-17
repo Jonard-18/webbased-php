@@ -304,7 +304,6 @@ $result = $conn->query($query);
         document.addEventListener('DOMContentLoaded', function () {
             reservationModal = new bootstrap.Modal(document.getElementById('reservationModal'));
 
-            // Add event listener for quantity input
             document.getElementById('quantity').addEventListener('input', function (e) {
                 const quantity = parseInt(e.target.value) || 0;
                 const totalAmount = quantity * currentItemAmount;
@@ -315,7 +314,6 @@ $result = $conn->query($query);
         function reserveItem(itemId) {
             document.getElementById('itemId').value = itemId;
 
-            // Reset form
             document.getElementById('error').classList.add('d-none');
             document.getElementById('quantity').value = 1;
             document.getElementById('amount').value = currentItemAmount;
