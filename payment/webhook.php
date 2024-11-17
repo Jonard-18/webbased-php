@@ -8,11 +8,12 @@ function validateSignature($payload, $signature, $signingKey) {
 }
 
 function logWebhookError($message, $data = null) {
+    $logFile = 'payment_logs.txt';
     $logMessage = date('[Y-m-d H:i:s] ') . $message;
     if ($data !== null) {
-        $logMessage .= "\nData: " . print_r($data, true);
+        $logMessage .= "\nData: " . json_encode($data, JSON_PRETTY_PRINT);
     }
-    error_log($logMessage . "\n", 3, 'webhook_debug.log');
+    file_put_contents($logFile, $logMessage . "\n", FILE_APPEND);
 }
 
 function processPaymentEvent($data, $conn) {
@@ -50,7 +51,11 @@ function processPaymentEvent($data, $conn) {
         $stmt->execute();
 
         $conn->commit();
-        logWebhookError("Payment successful - ID: $paymentId, Amount: $amount, Reference: $referenceNumber");
+        logWebhookError("PAYMENT SUCCESS", [
+            'payment_id' => $paymentId,
+            'amount' => $amount,
+            'reference' => $referenceNumber
+        ]);
     } catch (Exception $e) {
         $conn->rollback();
         throw $e;
@@ -58,6 +63,16 @@ function processPaymentEvent($data, $conn) {
 }
 
 function processFailedPaymentEvent($data, $conn) {
+    $paymentId = $data['data']['id'];
+    $amount = $data['data']['attributes']['amount'] / 100;
+    $referenceNumber = $data['data']['attributes']['reference_number'] ?? '';
+
+    logWebhookError("PAYMENT FAILED", [
+        'payment_id' => $paymentId,
+        'amount' => $amount,
+        'reference' => $referenceNumber
+    ]);
+
     // Similar to processPaymentEvent, with specific steps for handling failed payments
 }
 
