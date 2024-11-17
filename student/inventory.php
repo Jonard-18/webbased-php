@@ -264,7 +264,7 @@ $result = $conn->query($query);
                     <!-- Hidden input for item ID -->
                     <input type="hidden" id="itemId" value="">
 
-                    <h6 class="mb-4">Secure Payment</h6>
+                    <h6 class="mb-4">Secure Payment for Reservation</h6>
 
                     <div class="mb-3">
                         <label for="quantity" class="form-label">Quantity</label>
@@ -280,7 +280,7 @@ $result = $conn->query($query);
 
                     <div id="error" class="alert alert-danger d-none"></div>
 
-                    <button type="button" class="btn btn-primary w-100" onclick="processPayment()" id="payButton">
+                    <button type="button" class="btn btn-primary w-100" id="payButton">
                         Pay Securely
                     </button>
 
