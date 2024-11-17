@@ -314,61 +314,6 @@ $result = $conn->query($query);
 
             reservationModal.show();
         }
-
-        async function processPayment() {
-            const quantity = document.getElementById('quantity').value;
-            const itemId = document.getElementById('itemId').value;
-            const amountPerItem = 100;
-            const totalAmount = quantity * amountPerItem;
-            document.getElementById('amount').value = totalAmount;
-            const errorDiv = document.getElementById('error');
-            const payButton = document.getElementById('payButton');
-
-            errorDiv.classList.add('d-none');
-            errorDiv.textContent = '';
-
-            if (!quantity || quantity <= 0) {
-                errorDiv.textContent = 'Please enter a valid quantity';
-                errorDiv.classList.remove('d-none');
-                return;
-            }
-
-            try {
-                payButton.disabled = true;
-                payButton.textContent = 'Processing...';
-
-                const response = await fetch('../payment/process-payment.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        amount: amountPerItem,
-                        itemId: itemId,  // Added itemId to the payload
-                        quantity: quantity
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                if (data.success) {
-                    window.location.href = data.checkoutUrl;
-                } else {
-                    throw new Error(data.error || 'Payment failed. Please try again.');
-                }
-            } catch (error) {
-                console.error('Payment error:', error);
-                errorDiv.textContent = error.message || 'An error occurred. Please try again.';
-                errorDiv.classList.remove('d-none');
-                payButton.disabled = false;
-                payButton.textContent = 'Pay Securely';
-            }
-        }
     </script>
 </body>
 
