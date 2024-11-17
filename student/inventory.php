@@ -81,89 +81,88 @@ $result = $conn->query($query);
             background-color: #FFC500;
             transform: translateX(5px);
         }
-        
-.main-content {
-    flex-grow: 1;
-    margin-left: 250px;
-    padding: 30px;
-    background-color: var(--light-gray);
-}
 
-.page-header {
-    background-color: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    margin-bottom: 25px;
-}
+        .main-content {
+            flex-grow: 1;
+            margin-left: 250px;
+            padding: 30px;
+            background-color: var(--light-gray);
+        }
 
-.search-card {
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    margin-bottom: 25px;
-    display: flex;
-    padding: 15px;
-    
-}
+        .page-header {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        }
 
-.inventory-card {
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
+        .search-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+            display: flex;
+            padding: 15px;
 
-.table {
-    margin-bottom: 0;
-}
+        }
 
-.table thead th {
-    background-color: var(--primary-red);
-    color: white;
-    border: none;
-}
+        .inventory-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
 
-.table tbody tr:hover {
-    background-color: rgba(139, 0, 0, 0.05);
-}
+        .table {
+            margin-bottom: 0;
+        }
 
-.btn-primary {
-    background-color: var(--primary-red);
-    border-color: var(--primary-red);
-}
+        .table thead th {
+            background-color: var(--primary-red);
+            color: white;
+            border: none;
+        }
 
-.btn-primary:hover {
-    background-color: #660000;
-    border-color: #660000;
-}
+        .table tbody tr:hover {
+            background-color: rgba(139, 0, 0, 0.05);
+        }
 
-.btn-outline-secondary {
-    color: var(--primary-red);
-    border-color: var(--primary-red);
-}
+        .btn-primary {
+            background-color: var(--primary-red);
+            border-color: var(--primary-red);
+        }
 
-.btn-outline-secondary:hover {
-    background-color: var(--primary-red);
-    color: white;
-}
+        .btn-primary:hover {
+            background-color: #660000;
+            border-color: #660000;
+        }
 
-.modal-header {
-    background-color: var(--primary-red);
-    color: white;
-}
+        .btn-outline-secondary {
+            color: var(--primary-red);
+            border-color: var(--primary-red);
+        }
 
-.modal-header .btn-close {
-    color: white;
-}
+        .btn-outline-secondary:hover {
+            background-color: var(--primary-red);
+            color: white;
+        }
 
-.badge {
-    padding: 8px 12px;
-    border-radius: 15px;
-}
+        .modal-header {
+            background-color: var(--primary-red);
+            color: white;
+        }
+
+        .modal-header .btn-close {
+            color: white;
+        }
+
+        .badge {
+            padding: 8px 12px;
+            border-radius: 15px;
+        }
 
 
         /* Main Content Styles */
-
     </style>
 </head>
 
@@ -177,7 +176,8 @@ $result = $conn->query($query);
             <a href="reservation.php" class="nav-button"><i class="fas fa-calendar-alt"></i> My Reservation</a>
             <a href="payment_history.php" class="nav-button"><i class="fas fa-money-bill-wave"></i> Payment History</a>
             <a href="support.php" class="nav-button"><i class="fas fa-headset"></i> Support</a>
-            <a href="../auth/Logout.php" class="nav-button" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i> Exit</a>
+            <a href="../auth/Logout.php" class="nav-button" style="margin-top: auto;"><i
+                    class="fas fa-sign-out-alt"></i> Exit</a>
         </div>
 
         <!-- Main Content -->
@@ -299,16 +299,26 @@ $result = $conn->query($query);
 
     <script>
         let reservationModal;
+        let currentItemAmount = 100;
 
         document.addEventListener('DOMContentLoaded', function () {
             reservationModal = new bootstrap.Modal(document.getElementById('reservationModal'));
+
+            // Add event listener for quantity input
+            document.getElementById('quantity').addEventListener('input', function (e) {
+                const quantity = parseInt(e.target.value) || 0;
+                const totalAmount = quantity * currentItemAmount;
+                document.getElementById('amount').value = totalAmount;
+            });
         });
 
         function reserveItem(itemId) {
             document.getElementById('itemId').value = itemId;
 
+            // Reset form
             document.getElementById('error').classList.add('d-none');
-            document.getElementById('amount').value = '';
+            document.getElementById('quantity').value = 1;
+            document.getElementById('amount').value = currentItemAmount;
             document.getElementById('payButton').disabled = false;
             document.getElementById('payButton').textContent = 'Pay Securely';
 
