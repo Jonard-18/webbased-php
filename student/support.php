@@ -1,6 +1,9 @@
 <?php
 session_start();
-include('../config/database.php');
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Student') {
+    header("Location: ../auth/Login.php");
+    exit();
+}
 include('../includes/header.php');
 ?>
 
@@ -10,18 +13,20 @@ include('../includes/header.php');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Support</title>
+    <title>EVSU-RESERVE Student Dashboard</title>
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
         :root {
             --primary-red: #8B0000;
             --accent-yellow: #FFD700;
             --light-gray: #f5f5f5;
-            --dark-gray: #333;
-            --secondary-bg: #fff;
         }
 
         body {
+            margin: 0;
+            padding: 0;
             font-family: Arial, sans-serif;
             background-color: var(--light-gray);
         }
@@ -29,7 +34,6 @@ include('../includes/header.php');
         .dashboard-container {
             display: flex;
             min-height: 100vh;
-            flex-direction: row;
         }
 
         /* Sidebar Styles */
@@ -40,15 +44,16 @@ include('../includes/header.php');
             position: fixed;
             height: 100vh;
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-            color: var(--accent-yellow);
         }
 
         .sidebar-header {
+            color: var(--accent-yellow);
             text-align: center;
             padding: 15px;
             font-weight: bold;
-            font-size: 1.4rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .nav-button {
@@ -60,9 +65,10 @@ include('../includes/header.php');
             border: none;
             border-radius: 5px;
             text-align: left;
+            cursor: pointer;
             font-weight: 600;
             text-decoration: none;
-            color: var(--dark-gray);
+            color: #333;
             transition: all 0.3s ease;
         }
 
@@ -71,6 +77,7 @@ include('../includes/header.php');
             transform: translateX(5px);
         }
 
+        /* Main Content Styles */
         /* Main Content Styles */
         .main-content {
             flex-grow: 1;
@@ -133,27 +140,27 @@ include('../includes/header.php');
                 padding: 20px;
             }
         }
+
+
     </style>
 </head>
 
 <body>
-
     <div class="dashboard-container">
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">EVSU-RESERVE - STUDENT</div>
-            <a href="dashboard.php" class="nav-button">📊 Dashboard</a>
-            <a href="inventory.php" class="nav-button">📦 Inventory</a>
-            <a href="reservation.php" class="nav-button">📅 My Reservation</a>
-            <a href="payment_history.php" class="nav-button">💰 Payment History</a>
-            <a href="support.php" class="nav-button">📞 Support</a>
-            <a href="../auth/Logout.php" class="nav-button" style="margin-top: auto;">🚪 Exit</a>
+            <a href="dashboard.php" class="nav-button"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="inventory.php" class="nav-button"><i class="fas fa-box"></i> Inventory</a>
+            <a href="reservation.php" class="nav-button"><i class="fas fa-calendar-alt"></i> My Reservation</a>
+            <a href="payment_history.php" class="nav-button"><i class="fas fa-money-bill-wave"></i> Payment History</a>
+            <a href="support.php" class="nav-button"><i class="fas fa-headset"></i> Support</a>
+            <a href="../auth/Logout.php" class="nav-button" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i> Exit</a>
         </div>
 
         <!-- Main Content -->
+        <!-- Main Content -->
         <div class="main-content">
-            <h1 class="section-title">Support Center</h1>
-
             <!-- Help Center Section -->
             <div class="support-section">
                 <h2 class="section-title">Help Center</h2>
@@ -359,9 +366,9 @@ include('../includes/header.php');
 
             </div>
         </div>
+
     </div>
 
-    <!-- Messenger Chat Plugin Code -->
     <div id="fb-root"></div>
     <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v12.0"
         nonce="YOUR_NONCE_VALUE"></script>
@@ -370,6 +377,8 @@ include('../includes/header.php');
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

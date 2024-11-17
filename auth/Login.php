@@ -112,22 +112,6 @@
     <?php
     include('../includes/header.php');
     session_start();
-
-    // Redirect if already logged in
-    if (isset($_SESSION['user_id'])) {
-        switch ($_SESSION['role']) {
-            case 'Student':
-                header("Location: ../student/dashboard.php");
-                break;
-            case 'Staff':
-                header("Location: ../staff/dashboard.php");
-                break;
-            case 'Admin':
-                header("Location: ../admin/dashboard.php");
-                break;
-        }
-        exit();
-    }
     ?>
 
     <div class="main-container">

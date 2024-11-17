@@ -16,6 +16,7 @@ include('../includes/header.php');
     <title>EVSU-RESERVE Student Dashboard</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
         :root {
             --primary-red: #8B0000;
@@ -170,12 +171,12 @@ include('../includes/header.php');
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">EVSU-RESERVE - STUDENT</div>
-            <a href="dashboard.php" class="nav-button">📊 Dashboard</a>
-            <a href="inventory.php" class="nav-button">📦 Inventory</a>
-            <a href="reservation.php" class="nav-button">📅 My Reservation</a>
-            <a href="payment_history.php" class="nav-button">💰 Payment History</a>
-            <a href="support.php" class="nav-button">📞 Support</a>
-            <a href="../auth/Logout.php" class="nav-button" style="margin-top: auto;">🚪 Exit</a>
+            <a href="dashboard.php" class="nav-button"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="inventory.php" class="nav-button"><i class="fas fa-box"></i> Inventory</a>
+            <a href="reservation.php" class="nav-button"><i class="fas fa-calendar-alt"></i> My Reservation</a>
+            <a href="payment_history.php" class="nav-button"><i class="fas fa-money-bill-wave"></i> Payment History</a>
+            <a href="support.php" class="nav-button"><i class="fas fa-headset"></i> Support</a>
+            <a href="../auth/Logout.php" class="nav-button" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i> Exit</a>
         </div>
 
         <!-- Main Content -->

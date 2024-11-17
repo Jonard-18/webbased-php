@@ -3,26 +3,168 @@ session_start();
 include('../config/database.php');
 include('../includes/header.php');
 
-
-// Fetch inventory items with added_by username
-$query = "SELECT i.*, u.username as added_by_name 
-          FROM inventory i 
-          LEFT JOIN users u ON i.added_by = u.user_id";
-
-if (isset($_GET['search'])) {
-    $search = mysqli_real_escape_string($conn, $_GET['search']);
-    $query .= " WHERE i.name LIKE '%$search%' OR i.sku LIKE '%$search%'";
-}
+// Query to fetch reservations with inventory details and payment status
+$query = "
+    SELECT i.sku, i.name, i.description, i.quantity, i.added_by_username, i.updated_at, i.amount, i.item_id AS item_id
+    FROM inventory i
+    ORDER BY i.name
+";
 
 $result = $conn->query($query);
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/inventory.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVSU-RESERVE Student Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        :root {
+            --primary-red: #8B0000;
+            --accent-yellow: #FFD700;
+            --light-gray: #f5f5f5;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: var(--light-gray);
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background-color: var(--primary-red);
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-header {
+            color: var(--accent-yellow);
+            text-align: center;
+            padding: 15px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-button {
+            display: block;
+            width: 85%;
+            margin: 10px auto;
+            padding: 12px 15px;
+            background-color: var(--accent-yellow);
+            border: none;
+            border-radius: 5px;
+            text-align: left;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            background-color: #FFC500;
+            transform: translateX(5px);
+        }
+        
+.main-content {
+    flex-grow: 1;
+    margin-left: 250px;
+    padding: 30px;
+    background-color: var(--light-gray);
+}
+
+.page-header {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 25px;
+}
+
+.search-card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 25px;
+    display: flex;
+    padding: 15px;
+    
+}
+
+.inventory-card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead th {
+    background-color: var(--primary-red);
+    color: white;
+    border: none;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(139, 0, 0, 0.05);
+}
+
+.btn-primary {
+    background-color: var(--primary-red);
+    border-color: var(--primary-red);
+}
+
+.btn-primary:hover {
+    background-color: #660000;
+    border-color: #660000;
+}
+
+.btn-outline-secondary {
+    color: var(--primary-red);
+    border-color: var(--primary-red);
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--primary-red);
+    color: white;
+}
+
+.modal-header {
+    background-color: var(--primary-red);
+    color: white;
+}
+
+.modal-header .btn-close {
+    color: white;
+}
+
+.badge {
+    padding: 8px 12px;
+    border-radius: 15px;
+}
+
+
+        /* Main Content Styles */
+
+    </style>
 </head>
 
 <body>
@@ -30,14 +172,15 @@ $result = $conn->query($query);
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">EVSU-RESERVE - STUDENT</div>
-            <a href="dashboard.php" class="nav-button">📊 Dashboard</a>
-            <a href="inventory.php" class="nav-button">📦 Inventory</a>
-            <a href="reservation.php" class="nav-button">📅 My Reservation</a>
-            <a href="payment_history.php" class="nav-button">💰 Payment History</a>
-            <a href="support.php" class="nav-button">📞 Support</a>
-            <a href="../auth/Logout.php" class="nav-button" style="margin-top: auto;">🚪 Exit</a>
+            <a href="dashboard.php" class="nav-button"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="inventory.php" class="nav-button"><i class="fas fa-box"></i> Inventory</a>
+            <a href="reservation.php" class="nav-button"><i class="fas fa-calendar-alt"></i> My Reservation</a>
+            <a href="payment_history.php" class="nav-button"><i class="fas fa-money-bill-wave"></i> Payment History</a>
+            <a href="support.php" class="nav-button"><i class="fas fa-headset"></i> Support</a>
+            <a href="../auth/Logout.php" class="nav-button" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i> Exit</a>
         </div>
 
+        <!-- Main Content -->
         <div class="main-content">
             <div class="page-header d-flex justify-content-between align-items-center">
                 <h1 class="h3 mb-0">Inventory Management</h1>
@@ -69,6 +212,7 @@ $result = $conn->query($query);
                                     <th>Name</th>
                                     <th>Description</th>
                                     <th>Quantity</th>
+                                    <th>Amount</th>
                                     <th>Added By</th>
                                     <th>Last Updated</th>
                                     <th>Actions</th>
@@ -86,7 +230,8 @@ $result = $conn->query($query);
                                                 <?php echo $row['quantity']; ?> available
                                             </span>
                                         </td>
-                                        <td><?php echo htmlspecialchars($row['added_by_name']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['amount']); ?> PHP</td>
+                                        <td><?php echo htmlspecialchars($row['added_by_username']); ?></td>
                                         <td><?php echo date('M d, Y H:i', strtotime($row['updated_at'])); ?></td>
                                         <td>
                                             <div class="btn-group">
@@ -145,10 +290,10 @@ $result = $conn->query($query);
                 </div>
             </div>
         </div>
+
+
+
     </div>
-
-
-
     <!-- Bootstrap JS and dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
