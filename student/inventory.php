@@ -3,38 +3,7 @@ session_start();
 include('../config/database.php');
 include('../includes/header.php');
 
-// Function to handle the reservation
-function reserveItem($itemId, $quantity, $userId) {
-    global $conn; // Use the existing database connection
 
-    // Prepare and execute the SQL statement
-    $stmt = $conn->prepare("INSERT INTO reservations (item_id, user_id, reserved_quantity, status, reserved_by_username) VALUES (?, ?, ?, 'Pending', ?)");
-    $stmt->bind_param("iiis", $itemId, $userId, $quantity, $_SESSION['username']); // Assuming username is stored in session
-    $stmt->execute();
-
-    // Update the inventory quantity
-    $stmt = $conn->prepare("UPDATE inventory SET quantity = quantity - ? WHERE item_id = ?");
-    $stmt->bind_param("ii", $quantity, $itemId);
-    $stmt->execute();
-
-    return $stmt->affected_rows > 0; // Return true if the reservation was successful
-}
-
-// Check if a reservation request is made
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['itemId']) && isset($_POST['quantity'])) {
-    $itemId = $_POST['itemId'];
-    $quantity = $_POST['quantity'];
-    $userId = $_SESSION['user_id']; // Assuming user ID is stored in session
-
-    // Call the function to reserve the item
-    $success = reserveItem($itemId, $quantity, $userId);
-
-    // Return a JSON response
-    echo json_encode(['success' => $success]);
-    exit; // Stop further execution
-}
-
-// Query to fetch reservations with inventory details and payment status
 $query = "
     SELECT i.sku, i.name, i.description, i.quantity, i.added_by_username, i.updated_at, i.amount, i.item_id AS item_id
     FROM inventory i
@@ -344,31 +313,6 @@ $result = $conn->query($query);
             document.getElementById('payButton').textContent = 'Pay Securely';
 
             reservationModal.show();
-        }
-
-        function processPayment() {
-            const itemId = document.getElementById('itemId').value;
-            const quantity = document.getElementById('quantity').value;
-
-            // Make an AJAX request to reserve the item
-            fetch('', { // Send to the same file
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({ itemId: itemId, quantity: quantity })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Item reserved successfully!');
-                    reservationModal.hide();
-                    // Optionally, refresh the page or update the UI
-                } else {
-                    alert('Failed to reserve item.');
-                }
-            })
-            .catch(error => console.error('Error:', error));
         }
     </script>
 </body>
