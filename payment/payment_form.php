@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'attributes' => [
                 'line_items' => [[
                     'name' => 'Scheduling Fee',
-                    'amount' => 10000, // Amount in cents (100 PHP)
+                    'amount' => 10000, 
                     'currency' => 'PHP',
                     'quantity' => 1
                 ]],
