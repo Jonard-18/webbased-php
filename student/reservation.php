@@ -6,7 +6,7 @@ include('../includes/header.php');
 // Query to fetch reservations with inventory details and payment status
 $query = "
     SELECT r.reservation_id, r.item_id, i.sku, i.name, r.reserved_quantity AS quantity,
-           r.reserved_at AS reservation_date, r.status, p.payment_status
+           r.reserved_at AS reservation_date, r.status, p.amount
     FROM reservations r
     LEFT JOIN inventory i ON r.item_id = i.item_id
     LEFT JOIN payments p ON r.reservation_id = p.reservation_id
@@ -294,7 +294,7 @@ $result = $conn->query($query);
                                 <th>Quantity</th>
                                 <th>Reservation Date</th>
                                 <th>Pickup Status</th>
-                                <th>Payment Status</th>
+                                <th>Amount</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -318,12 +318,7 @@ $result = $conn->query($query);
                                             break;
                                     }
                                     
-                                    // Determine payment status badge classes
-                                    $payment_class = $row['payment_status'] == 'Completed' ? 
-                                        'payment-completed' : 'payment-unpaid';
-                                    
-                                    // Handle null payment status
-                                    $payment_status = $row['payment_status'] ?? 'Unpaid';
+
                                     
                                     echo "<tr>
                                         <td>" . htmlspecialchars($row['name']) . "</td>
@@ -332,8 +327,7 @@ $result = $conn->query($query);
                                         <td>{$reservation_date}</td>
                                         <td><span class='status-badge {$status_class}'>" . 
                                             htmlspecialchars($row['status']) . "</span></td>
-                                        <td><span class='status-badge {$payment_class}'>" . 
-                                            htmlspecialchars($payment_status) . "</span></td>
+                                        <td>" . htmlspecialchars($row['amount']) . "</td>
                                     </tr>";
                                 }
                             } else {
