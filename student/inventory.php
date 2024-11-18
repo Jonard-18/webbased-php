@@ -165,18 +165,19 @@ $result = $conn->query($query);
             padding: 8px 12px;
             border-radius: 15px;
         }
+
         .alert {
             margin: 20px 0;
             padding: 15px;
             border-radius: 5px;
         }
-        
+
         .alert-success {
             background-color: #d4edda;
             border-color: #c3e6cb;
             color: #155724;
         }
-        
+
         .alert-danger {
             background-color: #f8d7da;
             border-color: #f5c6cb;
@@ -282,64 +283,74 @@ $result = $conn->query($query);
 
     <!-- Reservation Payment Modal -->
     <div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="reservationModalLabel">Reservation Payment</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="paymentForm">
-                            <input type="hidden" id="itemId" value="">
-                            <h6 class="mb-4" id="itemName"></h6>
-                            <div class="mb-3">
-                                <label for="quantity" class="form-label">Quantity</label>
-                                <input type="number" class="form-control" id="quantity" min="1" value="1" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="amount" class="form-label">Total Amount (PHP)</label>
-                                <input type="text" class="form-control" id="amount" readonly>
-                            </div>
-                            <div id="error" class="alert alert-danger d-none"></div>
-                            <button type="submit" class="btn btn-primary w-100" id="payButton">
-                                Proceed to Payment
-                            </button>
-                        </form>
-                    </div>
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reservationModalLabel">Reservation Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="paymentForm">
+                        <input type="hidden" id="itemId" value="">
+                        <h6 class="mb-4" id="itemName"></h6>
+                        <div class="mb-3">
+                            <label for="quantity" class="form-label">Quantity</label>
+                            <input type="number" class="form-control" id="quantity" min="1" value="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Total Amount (PHP)</label>
+                            <input type="text" class="form-control" id="amount" readonly>
+                        </div>
+                        <div id="error" class="alert alert-danger d-none"></div>
+                        <button type="submit" class="btn btn-primary w-100" id="payButton">
+                            Proceed to Payment
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
+    </div>
     <!-- Bootstrap JS and dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://js.paymongo.com/v1/payment.js"></script>
-
 
     <script>
         let reservationModal;
         let currentItemAmount = 0;
         let currentItemId = 0;
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Initialize the modal
             reservationModal = new bootstrap.Modal(document.getElementById('reservationModal'));
 
             // Quantity change handler
-            document.getElementById('quantity').addEventListener('input', function(e) {
+            document.getElementById('quantity').addEventListener('input', function (e) {
                 const quantity = parseInt(e.target.value) || 0;
                 const totalAmount = quantity * currentItemAmount;
                 document.getElementById('amount').value = totalAmount.toFixed(2) + ' PHP';
             });
 
             // Form submission handler
-            document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+            document.getElementById('paymentForm').addEventListener('submit', async function (e) {
                 e.preventDefault();
                 const payButton = document.getElementById('payButton');
+                const errorDiv = document.getElementById('error');
+                const quantityInput = document.getElementById('quantity');
+
+                // Basic validation
+                if (!quantityInput.value || quantityInput.value < 1) {
+                    errorDiv.textContent = 'Please enter a valid quantity';
+                    errorDiv.classList.remove('d-none');
+                    return;
+                }
+
                 payButton.disabled = true;
-                payButton.textContent = 'Processing...';
+                payButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                errorDiv.classList.add('d-none');
 
                 try {
-                    const quantity = document.getElementById('quantity').value;
+                    const quantity = parseInt(quantityInput.value);
                     const amount = currentItemAmount * quantity;
 
                     const response = await fetch('create_payment.php', {
@@ -356,35 +367,58 @@ $result = $conn->query($query);
 
                     const data = await response.json();
 
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Payment initialization failed');
+                    }
+
                     if (data.success && data.checkoutUrl) {
+                        // Save form data to session storage before redirect
+                        sessionStorage.setItem('lastPaymentAttempt', JSON.stringify({
+                            itemId: currentItemId,
+                            quantity: quantity,
+                            amount: amount,
+                            timestamp: new Date().toISOString()
+                        }));
+
                         // Redirect to PayMongo checkout URL
                         window.location.href = data.checkoutUrl;
                     } else {
-                        throw new Error(data.error || 'Payment initialization failed');
+                        throw new Error(data.error || 'Failed to create payment session');
                     }
                 } catch (error) {
-                    document.getElementById('error').textContent = error.message;
-                    document.getElementById('error').classList.remove('d-none');
+                    errorDiv.textContent = error.message;
+                    errorDiv.classList.remove('d-none');
                     payButton.disabled = false;
                     payButton.textContent = 'Proceed to Payment';
                 }
             });
+
+            // Handle payment status messages
+            const alertElement = document.querySelector('.alert');
+            if (alertElement) {
+                setTimeout(() => {
+                    const bsAlert = new bootstrap.Alert(alertElement);
+                    bsAlert.close();
+                }, 5000);
+            }
         });
 
         // Function to open the reservation modal
         function reserveItem(itemId, itemAmount, itemName) {
             currentItemId = itemId;
             currentItemAmount = itemAmount;
-            
+
             document.getElementById('itemId').value = itemId;
             document.getElementById('itemName').textContent = 'Reserve Item: ' + itemName;
             document.getElementById('quantity').value = 1;
             document.getElementById('amount').value = itemAmount.toFixed(2) + ' PHP';
-            
+
+            // Reset error message and button state
             document.getElementById('error').classList.add('d-none');
-            document.getElementById('payButton').disabled = false;
-            document.getElementById('payButton').textContent = 'Proceed to Payment';
-            
+            const payButton = document.getElementById('payButton');
+            payButton.disabled = false;
+            payButton.textContent = 'Proceed to Payment';
+
             reservationModal.show();
         }
     </script>

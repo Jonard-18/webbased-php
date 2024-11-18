@@ -1,15 +1,41 @@
 <?php
 session_start();
+include '../config/database.php';
 header('Content-Type: application/json');
 
 try {
+    // Verify user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        throw new Exception('User not authenticated');
+    }
+
     // Get POST data
     $data = json_decode(file_get_contents('php://input'), true);
     
+    // Validate input data
+    if (!isset($data['itemId']) || !isset($data['quantity']) || !isset($data['amount'])) {
+        throw new Exception('Missing required data');
+    }
+
+    // Verify item exists and has sufficient quantity
+    $stmt = $conn->prepare("SELECT quantity FROM inventory WHERE item_id = ?");
+    $stmt->bind_param("i", $data['itemId']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $item = $result->fetch_assoc();
+
+    if (!$item) {
+        throw new Exception('Item not found');
+    }
+
+    if ($item['quantity'] < $data['quantity']) {
+        throw new Exception('Insufficient quantity available');
+    }
+
     // Generate a unique reference number
     $reference = 'ORDER_' . time() . '_' . uniqid();
     
-    // PayMongo API endpoint for creating payment intent
+    // PayMongo API endpoint
     $url = 'https://api.paymongo.com/v1/checkout_sessions';
     
     // Get the current domain
@@ -17,20 +43,22 @@ try {
     $domain = $_SERVER['HTTP_HOST'];
     $base_url = $protocol . $domain;
     
-    // Store payment details in session with reference as key
+    // Store payment details in session
     $_SESSION['payments'][$reference] = [
         'item_id' => $data['itemId'],
         'quantity' => $data['quantity'],
         'amount' => $data['amount'],
+        'user_id' => $_SESSION['user_id'],
+        'username' => $_SESSION['username'],
         'created_at' => time()
     ];
     
-    // Prepare the data
+    // Prepare PayMongo payload
     $payload = [
         'data' => [
             'attributes' => [
                 'line_items' => [[
-                    'amount' => intval($data['amount'] * 100), // Convert to cents
+                    'amount' => intval($data['amount'] * 100),
                     'currency' => 'PHP',
                     'name' => 'Item Reservation',
                     'quantity' => intval($data['quantity'])
@@ -49,17 +77,16 @@ try {
 
     // Initialize cURL
     $ch = curl_init($url);
-    
-    // Set cURL options
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Content-Type: application/json',
-        'Authorization: Basic ' . base64_encode('sk_test_XhhSeNsJTpZVbwCstLAJBzso')
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => json_encode($payload),
+        CURLOPT_HTTPHEADER => [
+            'Content-Type: application/json',
+            'Authorization: Basic ' . base64_encode('sk_test_XhhSeNsJTpZVbwCstLAJBzso')
+        ]
     ]);
 
-    // Execute cURL request
     $response = curl_exec($ch);
     
     if (curl_errno($ch)) {
@@ -68,13 +95,10 @@ try {
     
     curl_close($ch);
     
-    // Parse response
     $result = json_decode($response, true);
     
     if (isset($result['data']['attributes']['checkout_url'])) {
-        // Store the checkout session ID in the payment data
         $_SESSION['payments'][$reference]['checkout_session_id'] = $result['data']['id'];
-        
         echo json_encode([
             'success' => true,
             'checkoutUrl' => $result['data']['attributes']['checkout_url']

@@ -1,5 +1,6 @@
 <?php
 session_start();
+include '../config/database.php';
 
 $reference = $_GET['reference'] ?? '';
 $log_file = 'payment_log.txt';
@@ -40,7 +41,7 @@ try {
     $result = json_decode($response, true);
     file_put_contents($log_file, "API Response: " . json_encode($result) . "\n", FILE_APPEND);
 
-    // Check payment status - Look for both the payment_intent status and the actual payment status
+    // Check payment status
     $payment_success = false;
     
     if (isset($result['data']['attributes']['payment_intent']['attributes']['status']) 
@@ -48,7 +49,6 @@ try {
         $payment_success = true;
     }
     
-    // Double check the actual payment status if available
     if (isset($result['data']['attributes']['payments']) 
         && !empty($result['data']['attributes']['payments'])
         && $result['data']['attributes']['payments'][0]['attributes']['status'] === 'paid') {
@@ -56,34 +56,76 @@ try {
     }
 
     if ($payment_success) {
-        $_SESSION['payment_status'] = 'success';
-        $_SESSION['payment_message'] = 'Payment processed successfully';
+        // Start transaction
+        $conn->begin_transaction();
         
-        // Get payment details
-        $payment = $result['data']['attributes']['payments'][0]['attributes'];
-        
-        // Log success with more details
-        $log_message = sprintf(
-            "Payment successful - Reference: %s - Item: %s - Quantity: %s - Amount: %s - Payment ID: %s\n",
-            $reference,
-            $payment_data['item_id'],
-            $payment_data['quantity'],
-            $payment['amount'] / 100, // Convert back from cents
-            $payment['id']
-        );
-        file_put_contents($log_file, $log_message, FILE_APPEND);
-        
-        // Store successful payment data in session with more details
-        $_SESSION['last_successful_payment'] = [
-            'reference' => $reference,
-            'item_id' => $payment_data['item_id'],
-            'quantity' => $payment_data['quantity'],
-            'amount' => $payment['amount'] / 100,
-            'payment_id' => $payment['id'],
-            'payment_method' => $result['data']['attributes']['payment_method_used'],
-            'completed_at' => $payment['paid_at']
-        ];
-        
+        try {
+            // 1. Create new reservation
+            $stmt = $conn->prepare("INSERT INTO reservations (item_id, user_id, reserved_quantity, down_payment, status, reserved_by_username) VALUES (?, ?, ?, ?, 'Pending', ?)");
+            $stmt->bind_param("iiids", 
+                $payment_data['item_id'],
+                $payment_data['user_id'],
+                $payment_data['quantity'],
+                $payment_data['amount'],
+                $payment_data['username']
+            );
+            $stmt->execute();
+            $reservation_id = $conn->insert_id;
+
+            // 2. Create the payment record
+            $payment = $result['data']['attributes']['payments'][0]['attributes'];
+            $amount = $payment['amount'] / 100; // Convert from cents
+            
+            $stmt = $conn->prepare("INSERT INTO payments (reservation_id, user_id, amount, payment_status) VALUES (?, ?, ?, 'Completed')");
+            $stmt->bind_param("iid", 
+                $reservation_id,
+                $payment_data['user_id'],
+                $amount
+            );
+            $stmt->execute();
+            
+            // 3. Update inventory quantity
+            $stmt = $conn->prepare("UPDATE inventory SET quantity = quantity - ? WHERE item_id = ?");
+            $stmt->bind_param("ii", 
+                $payment_data['quantity'],
+                $payment_data['item_id']
+            );
+            $stmt->execute();
+            
+            // If everything is successful, commit the transaction
+            $conn->commit();
+            
+            $_SESSION['payment_status'] = 'success';
+            $_SESSION['payment_message'] = 'Payment processed successfully and reservation created';
+            
+            // Log success
+            $log_message = sprintf(
+                "Payment successful - Reference: %s - Item: %s - Quantity: %s - Amount: %s - Payment ID: %s - Reservation ID: %s\n",
+                $reference,
+                $payment_data['item_id'],
+                $payment_data['quantity'],
+                $amount,
+                $payment['id'],
+                $reservation_id
+            );
+            file_put_contents($log_file, $log_message, FILE_APPEND);
+            
+            $_SESSION['last_successful_payment'] = [
+                'reference' => $reference,
+                'item_id' => $payment_data['item_id'],
+                'quantity' => $payment_data['quantity'],
+                'amount' => $amount,
+                'payment_id' => $payment['id'],
+                'reservation_id' => $reservation_id,
+                'payment_method' => $result['data']['attributes']['payment_method_used'],
+                'completed_at' => $payment['paid_at']
+            ];
+            
+        } catch (Exception $e) {
+            // If there's any error, roll back the transaction
+            $conn->rollback();
+            throw new Exception("Database error: " . $e->getMessage());
+        }
     } else {
         $reason = $result['errors'][0]['detail'] ?? 'Payment verification failed';
         $_SESSION['payment_status'] = 'failed';
