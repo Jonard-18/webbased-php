@@ -235,7 +235,7 @@ $result = $conn->query($query);
                                         <td>
                                             <div class="btn-group">
                                                 <button type="button" class="btn btn-sm btn-outline-success"
-                                                    onclick="reserveItem(<?php echo $row['item_id']; ?>, <?php echo $row['amount']; ?>)">
+                                                    onclick="reserveItem(<?php echo $row['item_id']; ?>, <?php echo $row['amount']; ?>, '<?php echo htmlspecialchars($row['name']); ?>')">
                                                     <i class="bi bi-bookmark"></i> Reserve
                                                 </button>
                                             </div>
@@ -261,7 +261,7 @@ $result = $conn->query($query);
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="itemId" value="">
-                    <h6 class="mb-4">Reserve Item</h6>
+                    <h6 class="mb-4" id="itemName">Reserve Item for </h6>
                     <div class="mb-3">
                         <label for="quantity" class="form-label">Quantity</label>
                         <input type="number" class="form-control" id="quantity" placeholder="Enter quantity" min="1"
@@ -300,11 +300,12 @@ $result = $conn->query($query);
             });
         });
 
-        function reserveItem(itemId, itemAmount) {
+        function reserveItem(itemId, itemAmount, itemName) {
             document.getElementById('itemId').value = itemId;
             document.getElementById('error').classList.add('d-none');
             document.getElementById('quantity').value = 1;
-            document.getElementById('amount').value = currentItemAmount;
+            document.getElementById('amount').value = itemAmount;
+            document.getElementById('itemName').textContent = 'Reserve Item for ' + itemName;
             document.getElementById('payButton').disabled = false;
             document.getElementById('payButton').textContent = 'Pay Securely';
             reservationModal.show();
