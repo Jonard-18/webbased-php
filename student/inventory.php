@@ -235,7 +235,7 @@ $result = $conn->query($query);
                                         <td>
                                             <div class="btn-group">
                                                 <button type="button" class="btn btn-sm btn-outline-success"
-                                                    onclick="reserveItem(<?php echo $row['item_id']; ?>)">
+                                                    onclick="reserveItem(<?php echo $row['item_id']; ?>, <?php echo $row['amount']; ?>)">
                                                     <i class="bi bi-bookmark"></i> Reserve
                                                 </button>
                                             </div>
@@ -256,42 +256,32 @@ $result = $conn->query($query);
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="reservationModalLabel">Reservation Payment</h5>
+                    <h5 class="modal-title" id="reservationModalLabel">Reservation Payment for Item</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Hidden input for item ID -->
                     <input type="hidden" id="itemId" value="">
-
-                    <h6 class="mb-4">Secure Payment for Reservation</h6>
-
+                    <h6 class="mb-4">Reserve Item</h6>
                     <div class="mb-3">
                         <label for="quantity" class="form-label">Quantity</label>
                         <input type="number" class="form-control" id="quantity" placeholder="Enter quantity" min="1"
                             value="1" required>
                     </div>
-
                     <div class="mb-3">
                         <label for="amount" class="form-label">Amount (PHP)</label>
-                        <input type="number" class="form-control" id="amount" placeholder="Enter amount (e.g. 100)"
+                        <input type="number" class="form-control" id="amount" placeholder="Amount will be calculated"
                             min="1" step="1" required readonly>
                     </div>
-
                     <div id="error" class="alert alert-danger d-none"></div>
-
                     <button type="button" class="btn btn-primary w-100" id="payButton">
                         Pay Securely
                     </button>
-
                     <div class="mt-3 text-muted small text-center">
                         This is a test payment page. Use test cards or test wallet accounts.
                     </div>
                 </div>
             </div>
         </div>
-
-
-
     </div>
     <!-- Bootstrap JS and dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -310,7 +300,7 @@ $result = $conn->query($query);
             });
         });
 
-        function reserveItem(itemId) {
+        function reserveItem(itemId, itemAmount) {
             document.getElementById('itemId').value = itemId;
             document.getElementById('error').classList.add('d-none');
             document.getElementById('quantity').value = 1;
