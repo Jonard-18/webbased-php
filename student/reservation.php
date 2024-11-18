@@ -2,6 +2,10 @@
 session_start();
 include('../config/database.php');
 include('../includes/header.php');
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Student') {
+    header("Location: ../auth/Login.php");
+    exit();
+}
 
 // Query to fetch reservations with inventory details and payment status
 $query = "

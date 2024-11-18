@@ -3,6 +3,11 @@ session_start();
 include '../config/database.php';
 include '../includes/header.php';
 
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Student') {
+    header("Location: ../auth/Login.php");
+    exit();
+}
+
 if (isset($_SESSION['payment_status'])) {
     $status = $_SESSION['payment_status'];
     $messageClass = ($status === 'success') ? 'alert-success' : 'alert-danger';
