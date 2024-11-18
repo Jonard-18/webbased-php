@@ -1,6 +1,10 @@
 <?php
 include 'db_connect.php';
-
+session_start();
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Student') {
+    header("Location: ../auth/Login.php");
+    exit();
+}
 // Fetch inventory data
 $sql = "SELECT * FROM inventory";
 $result = $conn->query($sql);
