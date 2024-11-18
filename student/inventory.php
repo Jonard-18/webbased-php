@@ -18,8 +18,7 @@ $result = $conn->query($query);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EVSU-RESERVE Student Dashboard</title>
-    <!-- Bootstrap CSS -->
+    <title>EVSU-RESERVE</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
@@ -313,13 +312,11 @@ $result = $conn->query($query);
 
         function reserveItem(itemId) {
             document.getElementById('itemId').value = itemId;
-
             document.getElementById('error').classList.add('d-none');
             document.getElementById('quantity').value = 1;
             document.getElementById('amount').value = currentItemAmount;
             document.getElementById('payButton').disabled = false;
             document.getElementById('payButton').textContent = 'Pay Securely';
-
             reservationModal.show();
         }
     </script>
