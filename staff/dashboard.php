@@ -1,7 +1,8 @@
 <?php
 include 'db_connect.php';
+
 session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Student') {
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Staff') {
     header("Location: ../auth/Login.php");
     exit();
 }
@@ -265,7 +266,7 @@ $reservations_json = json_encode($reservations_data);
             .then(data => {
                 if (data.success) {
                     alert('Reservation marked as fulfilled!');
-                    location.reload(); // Reload to update the list
+                    location.reload();
                 } else {
                     alert('Error marking reservation as fulfilled.');
                 }
