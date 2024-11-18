@@ -310,6 +310,11 @@ $result = $conn->query($query);
             document.getElementById('payButton').textContent = 'Pay Securely';
             reservationModal.show();
         }
+
+        
+
+
+
     </script>
 </body>
 
