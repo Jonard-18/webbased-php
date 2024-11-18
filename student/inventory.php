@@ -1,7 +1,7 @@
 <?php
 session_start();
-include('../config/database.php');
-include('../includes/header.php');
+include '../config/database.php';
+include '../includes/header.php';
 
 
 $query = "
