@@ -204,16 +204,16 @@ $result = $conn->query($query);
 
         <!-- Main Content -->
         <div class="main-content">
-        <?php if (isset($messageText)): ?>
+
+            <div class="page-header d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">Inventory Management</h1>
+            </div>
+            <?php if (isset($messageText)): ?>
                 <div class="alert <?php echo $messageClass; ?> alert-dismissible fade show" role="alert">
                     <?php echo $messageText; ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             <?php endif; ?>
-
-            <div class="page-header d-flex justify-content-between align-items-center">
-                <h1 class="h3 mb-0">Inventory Management</h1>
-            </div>
 
             <div class="search-card">
                 <div class="card-body">
