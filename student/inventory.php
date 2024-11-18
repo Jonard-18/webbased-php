@@ -304,7 +304,7 @@ $result = $conn->query($query);
             document.getElementById('itemId').value = itemId;
             document.getElementById('error').classList.add('d-none');
             document.getElementById('quantity').value = 1;
-            document.getElementById('amount').value = itemAmount;
+            document.getElementById('amount').value = 100;
             document.getElementById('itemName').textContent = 'Reserve Item for ' + itemName;
             document.getElementById('payButton').disabled = false;
             document.getElementById('payButton').textContent = 'Pay Securely';
