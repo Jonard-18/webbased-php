@@ -56,9 +56,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     header("Location: ../login.php?error=invalid_role");
             }
 
-            exit();
-
-            
         } else {
             // Invalid password
             echo "Invalid password for user: " . $username;
