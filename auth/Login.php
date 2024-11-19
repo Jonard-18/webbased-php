@@ -136,7 +136,7 @@
                 </div>
                 <button type="submit" class="btn btn-login w-100">Login</button>
 
-                <div class="forgot-password mt-3 d-flex justify-content-between">
+                <div class="forgot-password mt-2 d-flex justify-content-between">
                     <a href="#">Create account?</a>
                     <a href="#">Forgot Password?</a>
                 </div>
