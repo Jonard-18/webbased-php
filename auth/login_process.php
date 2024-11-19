@@ -2,7 +2,6 @@
 session_start();
 include('../config/database.php');
 
-// Function to sanitize input
 function sanitize_input($data)
 {
     $data = trim($data);
@@ -11,14 +10,12 @@ function sanitize_input($data)
     return $data;
 }
 
-// Check if form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Get and sanitize user input
-    $username = sanitize_input($_POST['username']);
+    $login_input = sanitize_input($_POST['username']);
     $password = $_POST['password'];
 
-    $stmt = $conn->prepare("SELECT user_id, username, password, role FROM users WHERE username = ?");
-    $stmt->bind_param("s", $username);
+    $stmt = $conn->prepare("SELECT user_id, username, email, password, role FROM users WHERE username = ? OR email = ?");
+    $stmt->bind_param("ss", $login_input, $login_input);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -29,10 +26,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['role'] = $user['role'];
-
-            echo "User ID: " . $_SESSION['user_id'] . "<br>";
-            echo "Username: " . $_SESSION['username'] . "<br>";
-            echo "Role: " . $_SESSION['role'] . "<br>";
 
             $activity_stmt = $conn->prepare("INSERT INTO useractivities (user_id, action, details) VALUES (?, 'login', 'Successful login')");
             $activity_stmt->bind_param("i", $user['user_id']);
@@ -48,23 +41,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 default:
                     header("Location: ../login.php?error=invalid_role");
             }
+            exit();
 
         } else {
-            echo "Invalid password for user: " . $username;
+            header("Location: login.php?error=invalid_credentials");
             exit();
         }
 
     } else {
-        echo "User not found: " . $username;
+        header("Location: login.php?error=invalid_credentials");
         exit();
     }
 
     $stmt->close();
 } else {
-    echo "Direct access is not allowed.";
-    // header("Location: ../login.php");
+    header("Location: login.php");
     exit();
 }
-
 $conn->close();
 ?>

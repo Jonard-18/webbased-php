@@ -1,22 +1,62 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Student') {
+// Enhanced security checks
+if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id']) || $_SESSION['role'] !== 'Student') {
+    // More strict redirection and session invalidation
+    session_unset();
+    session_destroy();
     header("Location: ../auth/Login.php");
     exit();
 }
-include('../includes/header.php');
-?>
 
+// Prevent direct file access
+if (!defined('APP_RUNNING')) {
+    define('APP_RUNNING', true);
+}
+
+include_once('../includes/header.php');
+require_once('../config/database.php');
+
+// Enhanced error handling
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+try {
+    // Prepared statement for user data retrieval
+    $stmt = $conn->prepare("SELECT created_at, email FROM users WHERE user_id = ? LIMIT 1");
+    $stmt->bind_param("i", $_SESSION['user_id']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows === 0) {
+        throw new Exception("User not found");
+    }
+
+    $userData = $result->fetch_assoc();
+    $formatted_date = date('F j, Y', strtotime($userData['created_at']));
+    $email = htmlspecialchars($userData['email'], ENT_QUOTES, 'UTF-8');
+
+    $stmt->close();
+} catch (Exception $e) {
+    // Log error and redirect with generic message
+    error_log("Dashboard Error: " . $e->getMessage());
+    $formatted_date = 'Date unavailable';
+    $email = 'Email unavailable';
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVSU-RESERVE Student Dashboard</title>
-    <!-- Bootstrap CSS -->
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" as="style">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    
+    <!-- Inline critical CSS to improve initial load performance -->
     <style>
         :root {
             --primary-red: #8B0000;
@@ -99,10 +139,10 @@ include('../includes/header.php');
             font-weight: bold;
         }
 
-        .creation-date {
+        .creation-date, .email-address {
             color: #666;
-            font-size: 14px;
-            margin-top: 8px;
+            font-size: 14px;    
+            margin: 0;
         }
 
         .accordion {
@@ -176,13 +216,14 @@ include('../includes/header.php');
             <a href="reservation.php" class="nav-button"><i class="fas fa-calendar-alt"></i> My Reservation</a>
             <a href="payment_history.php" class="nav-button"><i class="fas fa-money-bill-wave"></i> Payment History</a>
             <a href="support.php" class="nav-button"><i class="fas fa-headset"></i> Support</a>
-            <a href="../auth/Logout.php" class="nav-button" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i> Exit</a>
+            <a href="../auth/Logout.php" class="nav-button" style="margin-top: auto;"><i
+                    class="fas fa-sign-out-alt"></i> Exit</a>
         </div>
 
         <!-- Main Content -->
         <div class="main-content">
-            
-        <div class="accordion" id="accordionPanelsStayOpenExample">
+
+            <div class="accordion" id="accordionPanelsStayOpenExample">
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button" type="button" data-bs-toggle="collapse"
@@ -194,7 +235,8 @@ include('../includes/header.php');
                     <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show">
                         <div class="accordion-body">
                             <strong>Important Update:</strong>
-                            <p>Welcome to the new EVSU-RESERVE system! We've made several improvements to enhance your reservation experience:</p>
+                            <p>Welcome to the new EVSU-RESERVE system! We've made several improvements to enhance your
+                                reservation experience:</p>
                             <ul>
                                 <li>Streamlined reservation process</li>
                                 <li>Real-time inventory updates</li>
@@ -206,32 +248,43 @@ include('../includes/header.php');
                 </div>
             </div>
             <div class="welcome-section">
-                <h1 class="welcome-header">Welcome <?php echo htmlspecialchars($_SESSION['username'] ?? 'Student'); ?>!</h1>
-                <p class="creation-date">Created at: February 19, 2023</p>
-            </div>
+            <p class="creation-date">Created at: <?= $formatted_date ?></p>
+
+                <h1 class="welcome-header">
+                    Welcome <?= htmlspecialchars($_SESSION['username'] ?? 'Student', ENT_QUOTES, 'UTF-8') ?>!
+                </h1>
+                <p class="email-address"><?= $email ?></p>
 
 
-            <div class="newly-added-section">
+
+
+
+                <div class="newly-added-section">
                 <h2 class="newly-added-header">Newly Added Items</h2>
                 <div class="items-grid">
-                    <div class="item-card">
-                        <h3>Laboratory Equipment</h3>
-                        <img src="/api/placeholder/400/320" alt="Laboratory Equipment">
-                        <p>New microscope set available for reservation</p>
-                        <p><strong>Status:</strong> Available</p>
-                    </div>
-                    <div class="item-card">
-                        <h3>Audio Visual Equipment</h3>
-                        <img src="/api/placeholder/400/320" alt="Audio Visual Equipment">
-                        <p>Professional projector with 4K resolution</p>
-                        <p><strong>Status:</strong> Available</p>
-                    </div>
-                    <div class="item-card">
-                        <h3>Sports Equipment</h3>
-                        <img src="/api/placeholder/400/320" alt="Sports Equipment">
-                        <p>New volleyball and basketball sets</p>
-                        <p><strong>Status:</strong> Available</p>
-                    </div>
+                    <?php
+                    try {
+                        // Use prepared statement for inventory query
+                        $inventoryStmt = $conn->prepare("SELECT name, description, quantity, amount FROM inventory ORDER BY created_at DESC LIMIT 3");
+                        $inventoryStmt->execute();
+                        $result = $inventoryStmt->get_result();
+
+                        while ($row = $result->fetch_assoc()) {
+                            echo "<div class='item-card'>";
+                            echo "<h3>" . htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8') . "</h3>";
+                            echo "<p>" . htmlspecialchars($row['description'], ENT_QUOTES, 'UTF-8') . "</p>";
+                            echo "<p><strong>Quantity:</strong> " . intval($row['quantity']) . "</p>";
+                            echo "<p><strong>Price:</strong> ₱" . number_format($row['amount'], 2) . "</p>";
+                            echo "<p><strong>Status:</strong> " . (intval($row['quantity']) > 0 ? 'Available' : 'Out of Stock') . "</p>";
+                            echo "</div>";
+                        }
+
+                        $inventoryStmt->close();
+                    } catch (Exception $e) {
+                        error_log("Inventory Fetch Error: " . $e->getMessage());
+                        echo "<p class='text-danger'>Unable to load inventory items</p>";
+                    }
+                    ?>
                 </div>
             </div>
         </div>
