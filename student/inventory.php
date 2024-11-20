@@ -271,7 +271,7 @@ $result = $conn->query($query);
                                         <td>
                                             <div class="btn-group">
                                                 <button type="button" class="btn btn-sm btn-outline-success"
-                                                    onclick="reserveItem(<?php echo $row['item_id']; ?>, <?php echo $row['amount']; ?>, '<?php echo htmlspecialchars($row['name']); ?>')">
+                                                    onclick="reserveItem(<?php echo $row['item_id']; ?>, '<?php echo htmlspecialchars($row['name']); ?>')">
                                                     <i class="bi bi-bookmark"></i> Reserve
                                                 </button>
                                             </div>
@@ -304,7 +304,7 @@ $result = $conn->query($query);
                             <input type="number" class="form-control" id="quantity" min="1" value="1" required>
                         </div>
                         <div class="mb-3">
-                            <label for="amount" class="form-label">Total Amount (PHP)</label>
+                            <label for="amount" class="form-label">Reservation Fee per quantity</label>
                             <input type="text" class="form-control" id="amount" readonly>
                         </div>
                         <div id="error" class="alert alert-danger d-none"></div>
@@ -321,111 +321,109 @@ $result = $conn->query($query);
     <script src="https://js.paymongo.com/v1/payment.js"></script>
 
     <script>
-        let reservationModal;
-        let currentItemAmount = 0;
-        let currentItemId = 0;
+let reservationModal;
+let currentItemId = 0;
 
-        document.addEventListener('DOMContentLoaded', function () {
-            // Initialize the modal
-            reservationModal = new bootstrap.Modal(document.getElementById('reservationModal'));
+document.addEventListener('DOMContentLoaded', function () {
+    // Initialize the modal
+    reservationModal = new bootstrap.Modal(document.getElementById('reservationModal'));
 
-            // Quantity change handler
-            document.getElementById('quantity').addEventListener('input', function (e) {
-                const quantity = parseInt(e.target.value) || 0;
-                const totalAmount = quantity * currentItemAmount;
-                document.getElementById('amount').value = totalAmount.toFixed(2) + ' PHP';
+    // Form submission handler
+    document.getElementById('paymentForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const payButton = document.getElementById('payButton');
+        const errorDiv = document.getElementById('error');
+        const quantityInput = document.getElementById('quantity');
+
+        // Basic validation
+        if (!quantityInput.value || quantityInput.value < 1) {
+            errorDiv.textContent = 'Please enter a valid quantity';
+            errorDiv.classList.remove('d-none');
+            return;
+        }
+
+        payButton.disabled = true;
+        payButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+        errorDiv.classList.add('d-none');
+
+        try {
+            const quantity = parseInt(quantityInput.value);
+            const amount = 100; // Fixed fee of 100 pesos
+
+            const response = await fetch('create_payment.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    itemId: currentItemId,
+                    quantity: quantity,
+                    amount: amount
+                })
             });
 
-            // Form submission handler
-            document.getElementById('paymentForm').addEventListener('submit', async function (e) {
-                e.preventDefault();
-                const payButton = document.getElementById('payButton');
-                const errorDiv = document.getElementById('error');
-                const quantityInput = document.getElementById('quantity');
+            const data = await response.json();
 
-                // Basic validation
-                if (!quantityInput.value || quantityInput.value < 1) {
-                    errorDiv.textContent = 'Please enter a valid quantity';
-                    errorDiv.classList.remove('d-none');
-                    return;
-                }
-
-                payButton.disabled = true;
-                payButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
-                errorDiv.classList.add('d-none');
-
-                try {
-                    const quantity = parseInt(quantityInput.value);
-                    const amount = currentItemAmount * quantity;
-
-                    const response = await fetch('create_payment.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            itemId: currentItemId,
-                            quantity: quantity,
-                            amount: amount
-                        })
-                    });
-
-                    const data = await response.json();
-
-                    if (!response.ok) {
-                        throw new Error(data.error || 'Payment initialization failed');
-                    }
-
-                    if (data.success && data.checkoutUrl) {
-                        // Save form data to session storage before redirect
-                        sessionStorage.setItem('lastPaymentAttempt', JSON.stringify({
-                            itemId: currentItemId,
-                            quantity: quantity,
-                            amount: amount,
-                            timestamp: new Date().toISOString()
-                        }));
-
-                        // Redirect to PayMongo checkout URL
-                        window.location.href = data.checkoutUrl;
-                    } else {
-                        throw new Error(data.error || 'Failed to create payment session');
-                    }
-                } catch (error) {
-                    errorDiv.textContent = error.message;
-                    errorDiv.classList.remove('d-none');
-                    payButton.disabled = false;
-                    payButton.textContent = 'Proceed to Payment';
-                }
-            });
-
-            // Handle payment status messages
-            const alertElement = document.querySelector('.alert');
-            if (alertElement) {
-                setTimeout(() => {
-                    const bsAlert = new bootstrap.Alert(alertElement);
-                    bsAlert.close();
-                }, 5000);
+            if (!response.ok) {
+                throw new Error(data.error || 'Payment initialization failed');
             }
-        });
 
-        // Function to open the reservation modal
-        function reserveItem(itemId, itemAmount, itemName) {
-            currentItemId = itemId;
-            currentItemAmount = itemAmount;
+            if (data.success && data.checkoutUrl) {
+                // Save form data to session storage before redirect
+                sessionStorage.setItem('lastPaymentAttempt', JSON.stringify({
+                    itemId: currentItemId,
+                    quantity: quantity,
+                    amount: amount,
+                    timestamp: new Date().toISOString()
+                }));
 
-            document.getElementById('itemId').value = itemId;
-            document.getElementById('itemName').textContent = 'Reserve Item: ' + itemName;
-            document.getElementById('quantity').value = 1;
-            document.getElementById('amount').value = itemAmount.toFixed(2) + ' PHP';
-
-            // Reset error message and button state
-            document.getElementById('error').classList.add('d-none');
-            const payButton = document.getElementById('payButton');
+                // Redirect to PayMongo checkout URL
+                window.location.href = data.checkoutUrl;
+            } else {
+                throw new Error(data.error || 'Failed to create payment session');
+            }
+        } catch (error) {
+            errorDiv.textContent = error.message;
+            errorDiv.classList.remove('d-none');
             payButton.disabled = false;
             payButton.textContent = 'Proceed to Payment';
-
-            reservationModal.show();
         }
+    });
+
+    // Handle payment status messages
+    const alertElement = document.querySelector('.alert');
+    if (alertElement) {
+        setTimeout(() => {
+            const bsAlert = new bootstrap.Alert(alertElement);
+            bsAlert.close();
+        }, 5000);
+    }
+    
+
+
+    // Quantity change handler - always show fixed fee regardless of quantity
+    document.getElementById('quantity').addEventListener('input', function (e) {
+        document.getElementById('amount').value = '100.00 PHP';
+    });
+});
+
+// Function to open the reservation modal
+function reserveItem(itemId, itemName) {
+    currentItemId = itemId;
+
+    document.getElementById('itemId').value = itemId;
+    document.getElementById('itemName').textContent = 'Reserve Item: ' + itemName;
+    document.getElementById('quantity').value = 1;
+    document.getElementById('amount').value = '100.00 PHP';
+
+    // Reset error message and button state
+    document.getElementById('error').classList.add('d-none');
+    const payButton = document.getElementById('payButton');
+    payButton.disabled = false;
+    payButton.textContent = 'Proceed to Payment';
+
+    reservationModal.show();
+}
     </script>
 
 </body>

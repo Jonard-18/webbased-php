@@ -160,11 +160,60 @@ $pending_result = $conn->query($pending_query);
             opacity: 0.8;
         }
 
-        .table-hover tbody tr:hover {
+        /* Enhanced Table Styles */
+        .table-reservations {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .table-reservations thead {
+            background-color: var(--primary-red);
+            color: var(--white);
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .table-reservations th {
+            padding: 15px;
+            vertical-align: middle;
+        }
+
+        .table-reservations td {
+            padding: 15px;
+            vertical-align: middle;
+            transition: background-color 0.3s ease;
+        }
+
+        .table-reservations tbody tr {
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .table-reservations tbody tr:hover {
             background-color: rgba(139, 0, 0, 0.05);
         }
+
+        .reservation-actions .btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8rem;
+            padding: 6px 10px;
+        }
+
+        .table-reservations .badge {
+            font-size: 0.7rem;
+            padding: 3px 6px;
+        }
+
+        .empty-reservations {
+            background-color: var(--white);
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: var(--soft-shadow);
+        }
     </style>
-</head>
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
@@ -188,69 +237,82 @@ $pending_result = $conn->query($pending_query);
 
         <!-- Main Content -->
         <div class="main-content container-fluid p-4">
-            <div class="row">
-                <div class="col-12">
-                    <h2 class="mb-4">
-                        <i class="fas fa-calendar-alt text-danger"></i> Pending Reservations
-                    </h2>
+        <div class="row">
+            <div class="col-12">
+                <h2 class="mb-4">
+                    <i class="fas fa-calendar-alt text-danger"></i> Pending Reservations
+                </h2>
 
-                    <?php if(isset($success_message)): ?>
-                        <div class="alert alert-success">
-                            <?php echo htmlspecialchars(string: $success_message); ?>
-                        </div>
-                    <?php endif; ?>
+                <?php if(isset($success_message)): ?>
+                    <div class="alert alert-success">
+                        <?php echo htmlspecialchars(string: $success_message); ?>
+                    </div>
+                <?php endif; ?>
 
-                    <?php if(isset($error_message)): ?>
-                        <div class="alert alert-danger">
-                            <?php echo htmlspecialchars($error_message); ?>
-                        </div>
-                    <?php endif; ?>
+                <?php if(isset($error_message)): ?>
+                    <div class="alert alert-danger">
+                        <?php echo htmlspecialchars($error_message); ?>
+                    </div>
+                <?php endif; ?>
 
-                    <?php if($pending_result->num_rows > 0): ?>
-                        <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                            <table class="table table-striped table-hover">
-                                <thead class="table-dark">
+                <?php if($pending_result->num_rows > 0): ?>
+                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                        <table class="table table-reservations">
+                            <thead>
+                                <tr>
+                                    <th>Item Details</th>
+                                    <th>Reservation Info</th>
+                                    <th>Reserved By</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php while($reservation = $pending_result->fetch_assoc()): ?>
                                     <tr>
-                                        <th>Item Name</th>
-                                        <th>SKU</th>
-                                        <th>Quantity</th>
-                                        <th>Reserved By</th>
-                                        <th>Reserved At</th>
-                                        <th>Actions</th>
+                                        <td>
+                                            <strong><?php echo htmlspecialchars($reservation['item_name']); ?></strong>
+                                            <br>
+                                            <small class="text-muted">SKU: <?php echo htmlspecialchars($reservation['sku']); ?></small>
+                                            <br>
+                                            <span class="badge bg-info">Qty: <?php echo htmlspecialchars($reservation['reserved_quantity']); ?></span>
+                                        </td>
+                                        <td>
+                                            <i class="far fa-clock text-primary"></i>
+                                            <?php echo date('M d, Y H:i', strtotime($reservation['reserved_at'])); ?>
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-user text-success"></i>
+                                            <?php echo htmlspecialchars($reservation['username']); ?>
+                                            <br>
+                                            <small class="text-muted"><?php echo htmlspecialchars($reservation['email']); ?></small>
+                                        </td>
+                                        <td class="text-center reservation-actions">
+                                            <form method="POST" action="" class="d-flex justify-content-center gap-2">
+                                                <input type="hidden" name="reservation_id" value="<?php echo $reservation['reservation_id']; ?>">
+                                                <button type="submit" name="update_reservation" value="Pickup" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-check-circle"></i> Pickup
+                                                </button>
+                                                <button type="submit" name="update_reservation" value="Cancelled" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-times-circle"></i> Cancel
+                                                </button>
+                                            </form>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    <?php while($reservation = $pending_result->fetch_assoc()): ?>
-                                        <tr>
-                                            <td><?php echo htmlspecialchars($reservation['item_name']); ?></td>
-                                            <td><?php echo htmlspecialchars($reservation['sku']); ?></td>
-                                            <td><?php echo htmlspecialchars($reservation['reserved_quantity']); ?></td>
-                                            <td><?php echo htmlspecialchars($reservation['username']); ?></td>
-                                            <td><?php echo date('M d, Y H:i', strtotime($reservation['reserved_at'])); ?></td>
-                                            <td>
-                                                <form method="POST" action="" class="d-flex gap-2">
-                                                    <input type="hidden" name="reservation_id" value="<?php echo $reservation['reservation_id']; ?>">
-                                                    <button type="submit" name="update_reservation" value="Pickup" class="btn btn-sm btn-success">
-                                                        <i class="fas fa-check-circle"></i> Pickup
-                                                    </button>
-                                                    <button type="submit" name="update_reservation" value="Cancelled" class="btn btn-sm btn-danger">
-                                                        <i class="fas fa-times-circle"></i> Cancel
-                                                    </button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    <?php endwhile; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    <?php else: ?>
-                        <div class="alert alert-info">
-                            No pending reservations at the moment.
-                        </div>
-                    <?php endif; ?>
-                </div>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php else: ?>
+                    <div class="empty-reservations">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Pending Reservations</h4>
+                        <p class="text-secondary">There are currently no items waiting to be picked up or processed.</p>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
+    </div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
