@@ -3,32 +3,24 @@ require_once 'db_connect.php';
 session_start();
 
 
-// Check if user is logged in and has appropriate permissions
-
-// Check if user is logged in and has appropriate permissions
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] != 'Admin' && $_SESSION['role'] != 'Staff')) {
     header("Location: ../auth/Login.php");
     exit();
 }
-// Check database connection
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Handle reservation updates
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_reservation'])) {
     $reservation_id = $_POST['reservation_id'];
     $action = $_POST['update_reservation'];
 
-    // Validate input
     if (!in_array($action, ['Pickup', 'Cancelled'])) {
         $error_message = "Invalid reservation action.";
     } else {
-        // Start a transaction for data integrity
         $conn->begin_transaction();
 
         try {
-            // Fetch reservation details
             $reservation_query = "SELECT item_id, reserved_quantity FROM reservations WHERE reservation_id = ?";
             $stmt = $conn->prepare($reservation_query);
             $stmt->bind_param("i", $reservation_id);
@@ -42,14 +34,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_reservation']))
             $item_id = $reservation_result['item_id'];
             $reserved_quantity = $reservation_result['reserved_quantity'];
 
-            // Update reservation status
             $update_reservation_query = "UPDATE reservations SET status = ? WHERE reservation_id = ?";
             $stmt = $conn->prepare($update_reservation_query);
             $status = ($action == 'Pickup') ? 'Fulfilled' : 'Cancelled';
             $stmt->bind_param("si", $status, $reservation_id);
             $stmt->execute();
 
-            // Adjust inventory if pickup
             if ($action == 'Pickup') {
                 $update_inventory_query = "UPDATE inventory SET quantity = quantity - ? WHERE item_id = ?";
                 $stmt = $conn->prepare($update_inventory_query);
@@ -57,19 +47,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_reservation']))
                 $stmt->execute();
             }
 
-            // Commit transaction
             $conn->commit();
             $success_message = "Reservation successfully " . strtolower($action) . ".";
 
         } catch (Exception $e) {
-            // Rollback transaction on error
             $conn->rollback();
             $error_message = "Error processing reservation: " . $e->getMessage();
         }
     }
 }
 
-// Rest of the existing code remains the same
 $pending_query = "
     SELECT r.reservation_id, r.reserved_quantity, r.reserved_at, 
            i.name AS item_name, i.sku, 
@@ -89,7 +76,6 @@ $pending_result = $conn->query($pending_query);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVSU-RESERVE Dashboard</title>
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -160,7 +146,6 @@ $pending_result = $conn->query($pending_query);
             opacity: 0.8;
         }
 
-        /* Enhanced Table Styles */
         .table-reservations {
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
@@ -235,7 +220,6 @@ $pending_result = $conn->query($pending_query);
             </a>
         </div>
 
-        <!-- Main Content -->
         <div class="main-content container-fluid p-4">
         <div class="row">
             <div class="col-12">

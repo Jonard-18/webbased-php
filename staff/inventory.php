@@ -2,13 +2,11 @@
 require_once 'db_connect.php';
 session_start();
 
-// Check if user is logged in and has appropriate permissions
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] != 'Admin' && $_SESSION['role'] != 'Staff')) {
     header("Location: ../auth/Login.php");
     exit();
 }
 
-// Handle Add New Item
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_item'])) {
     $name = $_POST['name'];
     $sku = $_POST['sku'];
@@ -19,13 +17,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_item'])) {
     $added_by_username = $_SESSION['username'];
 
     $stmt = $conn->prepare("INSERT INTO inventory (name, sku, description, quantity, added_by, added_by_username, amount) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    // Adjusted bind_param types: s = string, i = integer, d = double
     $stmt->bind_param("sssissd", $name, $sku, $description, $quantity, $added_by, $added_by_username, $amount);
     $stmt->execute();
     $stmt->close();
 }
 
-// Handle Edit Item
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['edit_item'])) {
     $item_id = $_POST['item_id'];
     $name = $_POST['name'];
@@ -35,25 +31,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['edit_item'])) {
     $amount = $_POST['amount'];
 
     $stmt = $conn->prepare("UPDATE inventory SET name=?, sku=?, description=?, quantity=?, amount=? WHERE item_id=?");
-    // bind_param types: s = string, i = integer, d = double
     $stmt->bind_param("sssidi", $name, $sku, $description, $quantity, $amount, $item_id);
     $stmt->execute();
     $stmt->close();
 }
 
-// Handle Delete Item
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_item'])) {
     $item_id = $_POST['delete_item_id'];
-
-    // Optional: You can add further verification here, such as checking if the item exists.
-
     $stmt = $conn->prepare("DELETE FROM inventory WHERE item_id = ?");
     $stmt->bind_param("i", $item_id);
     $stmt->execute();
     $stmt->close();
 }
 
-// Item Lookup Feature
 $search_query = isset($_GET['search']) ? trim($_GET['search']) : '';
 $inventory_query = "SELECT * FROM inventory ";
 
@@ -69,7 +59,6 @@ if (!empty($search_query)) {
     $inventory_result = $conn->query($inventory_query);
 }
 
-// Low stock threshold
 $LOW_STOCK_THRESHOLD = 5;
 ?>
 
@@ -166,7 +155,6 @@ $LOW_STOCK_THRESHOLD = 5;
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
                 EVSU-RESERVE
@@ -185,11 +173,9 @@ $LOW_STOCK_THRESHOLD = 5;
             </a>
         </div>
 
-        <!-- Main Content -->
         <div class="main-content container-fluid">
             <h2 class="my-4">Inventory Management</h2>
 
-            <!-- Search Bar -->
             <div class="search-container">
                 <form method="GET" class="d-flex">
                     <input 
@@ -217,7 +203,6 @@ $LOW_STOCK_THRESHOLD = 5;
                 </div>
             <?php endif; ?>
 
-            <!-- Add New Item Modal -->
             <div class="modal fade" id="addItemModal" tabindex="-1">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -256,7 +241,6 @@ $LOW_STOCK_THRESHOLD = 5;
                 </div>
             </div>
 
-            <!-- Inventory Table -->
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5>Current Inventory</h5>
@@ -310,7 +294,6 @@ $LOW_STOCK_THRESHOLD = 5;
                 </div>
             </div>
 
-            <!-- Edit Item Modal -->
             <div class="modal fade" id="editItemModal" tabindex="-1">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -350,7 +333,6 @@ $LOW_STOCK_THRESHOLD = 5;
                 </div>
             </div>
 
-            <!-- Delete Item Modal -->
             <div class="modal fade" id="deleteItemModal" tabindex="-1">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
@@ -374,11 +356,9 @@ $LOW_STOCK_THRESHOLD = 5;
         </div>
     </div>
 
-    <!-- Bootstrap JS and Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Edit Item Modal Handling
             const editButtons = document.querySelectorAll('.edit-item');
             const editModal = new bootstrap.Modal(document.getElementById('editItemModal'));
 
@@ -394,7 +374,6 @@ $LOW_STOCK_THRESHOLD = 5;
                 });
             });
 
-            // Delete Item Modal Handling
             const deleteButtons = document.querySelectorAll('.delete-item');
             const deleteModal = new bootstrap.Modal(document.getElementById('deleteItemModal'));
 
