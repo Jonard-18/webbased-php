@@ -4,20 +4,16 @@ include '../config/database.php';
 header('Content-Type: application/json');
 
 try {
-    // Verify user is logged in
     if (!isset($_SESSION['user_id'])) {
         throw new Exception('User not authenticated');
     }
 
-    // Get POST data
     $data = json_decode(file_get_contents('php://input'), true);
     
-    // Validate input data
     if (!isset($data['itemId']) || !isset($data['quantity']) || !isset($data['amount'])) {
         throw new Exception('Missing required data');
     }
 
-    // Verify item exists and has sufficient quantity
     $stmt = $conn->prepare("SELECT quantity FROM inventory WHERE item_id = ?");
     $stmt->bind_param("i", $data['itemId']);
     $stmt->execute();
@@ -32,18 +28,14 @@ try {
         throw new Exception('Insufficient quantity available');
     }
 
-    // Generate a unique reference number
     $reference = 'ORDER_' . time() . '_' . uniqid();
     
-    // PayMongo API endpoint
     $url = 'https://api.paymongo.com/v1/checkout_sessions';
     
-    // Get the current domain
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
     $domain = $_SERVER['HTTP_HOST'];
     $base_url = $protocol . $domain;
     
-    // Store payment details in session
     $_SESSION['payments'][$reference] = [
         'item_id' => $data['itemId'],
         'quantity' => $data['quantity'],
@@ -53,7 +45,6 @@ try {
         'created_at' => time()
     ];
     
-    // Prepare PayMongo payload
     $payload = [
         'data' => [
             'attributes' => [
@@ -75,7 +66,6 @@ try {
         ]
     ];
 
-    // Initialize cURL
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
