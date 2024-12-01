@@ -19,8 +19,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_item'])) {
     $added_by_username = $_SESSION['username'];
 
     $stmt = $conn->prepare("INSERT INTO inventory (name, sku, description, quantity, added_by, added_by_username, amount) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssidsd", $name, $sku, $description, $quantity, $added_by, $added_by_username, $amount);
+    // Adjusted bind_param types: s = string, i = integer, d = double
+    $stmt->bind_param("sssissd", $name, $sku, $description, $quantity, $added_by, $added_by_username, $amount);
     $stmt->execute();
+    $stmt->close();
 }
 
 // Handle Edit Item
@@ -33,8 +35,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['edit_item'])) {
     $amount = $_POST['amount'];
 
     $stmt = $conn->prepare("UPDATE inventory SET name=?, sku=?, description=?, quantity=?, amount=? WHERE item_id=?");
-    $stmt->bind_param("sssidd", $name, $sku, $description, $quantity, $amount, $item_id);
+    // bind_param types: s = string, i = integer, d = double
+    $stmt->bind_param("sssidi", $name, $sku, $description, $quantity, $amount, $item_id);
     $stmt->execute();
+    $stmt->close();
+}
+
+// Handle Delete Item
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_item'])) {
+    $item_id = $_POST['delete_item_id'];
+
+    // Optional: You can add further verification here, such as checking if the item exists.
+
+    $stmt = $conn->prepare("DELETE FROM inventory WHERE item_id = ?");
+    $stmt->bind_param("i", $item_id);
+    $stmt->execute();
+    $stmt->close();
 }
 
 // Item Lookup Feature
@@ -42,12 +58,16 @@ $search_query = isset($_GET['search']) ? trim($_GET['search']) : '';
 $inventory_query = "SELECT * FROM inventory ";
 
 if (!empty($search_query)) {
-    $search_query = $conn->real_escape_string($search_query);
-    $inventory_query .= "WHERE name LIKE '%$search_query%' OR sku LIKE '%$search_query%' ";
+    $search_param = "%" . $search_query . "%";
+    $inventory_query .= "WHERE name LIKE ? OR sku LIKE ? ";
+    $stmt_search = $conn->prepare($inventory_query . "ORDER BY quantity ASC");
+    $stmt_search->bind_param("ss", $search_param, $search_param);
+    $stmt_search->execute();
+    $inventory_result = $stmt_search->get_result();
+} else {
+    $inventory_query .= "ORDER BY quantity ASC";
+    $inventory_result = $conn->query($inventory_query);
 }
-
-$inventory_query .= "ORDER BY quantity ASC";
-$inventory_result = $conn->query($inventory_query);
 
 // Low stock threshold
 $LOW_STOCK_THRESHOLD = 5;
@@ -179,7 +199,7 @@ $LOW_STOCK_THRESHOLD = 5;
                         placeholder="Search by Name or SKU" 
                         value="<?php echo htmlspecialchars($search_query); ?>"
                     >
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary ms-2">
                         <i class="fas fa-search"></i> Search
                     </button>
                     <?php if (!empty($search_query)): ?>
@@ -277,6 +297,11 @@ $LOW_STOCK_THRESHOLD = 5;
                                             data-amount="<?php echo $item['amount']; ?>">
                                             <i class="fas fa-edit"></i>
                                         </button>
+                                        <button class="btn btn-sm btn-danger delete-item" 
+                                            data-item-id="<?php echo $item['item_id']; ?>"
+                                            data-item-name="<?php echo htmlspecialchars($item['name']); ?>">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
                                     </td>
                                 </tr>
                             <?php endwhile; ?>
@@ -324,12 +349,36 @@ $LOW_STOCK_THRESHOLD = 5;
                     </div>
                 </div>
             </div>
+
+            <!-- Delete Item Modal -->
+            <div class="modal fade" id="deleteItemModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <form method="POST">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Delete Item</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Are you sure you want to delete <strong id="delete-item-name"></strong>?</p>
+                                <input type="hidden" name="delete_item_id" id="delete-item-id">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" name="delete_item" class="btn btn-danger">Delete</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- Bootstrap JS and Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Edit Item Modal Handling
             const editButtons = document.querySelectorAll('.edit-item');
             const editModal = new bootstrap.Modal(document.getElementById('editItemModal'));
 
@@ -342,6 +391,20 @@ $LOW_STOCK_THRESHOLD = 5;
                     document.getElementById('edit-quantity').value = this.dataset.quantity;
                     document.getElementById('edit-amount').value = this.dataset.amount;
                     editModal.show();
+                });
+            });
+
+            // Delete Item Modal Handling
+            const deleteButtons = document.querySelectorAll('.delete-item');
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteItemModal'));
+
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const itemId = this.dataset.itemId;
+                    const itemName = this.dataset.itemName;
+                    document.getElementById('delete-item-id').value = itemId;
+                    document.getElementById('delete-item-name').textContent = itemName;
+                    deleteModal.show();
                 });
             });
         });

@@ -22,7 +22,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($result->num_rows === 1) {
         $user = $result->fetch_assoc();
 
-        if ($password === $user['password']) {
+        // Use password_verify to check if the entered password matches the hashed password
+        if (password_verify($password, $user['password'])) {
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['role'] = $user['role'];
@@ -42,12 +43,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     header("Location: ../login.php?error=invalid_role");
             }
             exit();
-
         } else {
             header("Location: login.php?error=invalid_credentials");
             exit();
         }
-
     } else {
         header("Location: login.php?error=invalid_credentials");
         exit();
