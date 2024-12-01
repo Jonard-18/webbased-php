@@ -1,5 +1,5 @@
 <?php
-session_start(); // Start the session to access error messages
+session_start(); 
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -41,8 +41,8 @@ session_start(); // Start the session to access error messages
             max-width: 550px;
             padding: 2.5rem;
             text-align: center;
-            position: relative; /* Added for positioning alert */
-            min-height: 350px; /* Set a minimum height to ensure consistent size */
+            position: relative;
+            min-height: 350px; 
         }
 
         .logo-container {
@@ -103,12 +103,12 @@ session_start(); // Start the session to access error messages
 
         .alert {
             margin-top: 15px;
-            opacity: 0; /* Start hidden */
-            transition: opacity 0.5s ease; /* Smooth transition */
+            opacity: 0; 
+            transition: opacity 0.5s ease; 
         }
 
         .alert.show {
-            opacity: 1; /* Fully visible when 'show' class is added */
+            opacity: 1; 
         }
     </style>
 </head>
@@ -122,8 +122,6 @@ session_start(); // Start the session to access error messages
 
             <h2 class="registration-title">EVSU - RESERVE</h2>
             <p class="registration-subtitle">Streamlining Inventory and Reservations</p>
-
-            <!-- Error Alert -->
             <?php
             if (isset($_GET['error'])) {
                 switch ($_GET['error']) {
@@ -164,13 +162,12 @@ session_start(); // Start the session to access error messages
         document.addEventListener('DOMContentLoaded', function () {
             const errorAlert = document.getElementById('error-alert');
             if (errorAlert) {
-                // Remove 'show' class after a short delay to perform fade-out
                 setTimeout(() => {
                     errorAlert.classList.remove('show');
                     setTimeout(() => {
                         errorAlert.remove();
-                    }, 500); // Wait for fade-out transition to complete
-                }, 2000); // Keep alert visible for 2 seconds
+                    }, 500);
+                }, 2000); 
             }
         });
     </script>
