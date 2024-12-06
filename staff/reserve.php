@@ -73,15 +73,12 @@ $pending_result = $conn->query($pending_query);
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- [Keep your existing head content] -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVSU-RESERVE Dashboard</title>
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* [Keep your existing styles] */
         :root {
             --primary-red: #8B0000;
             --accent-yellow: #FFD700;
@@ -95,8 +92,6 @@ $pending_result = $conn->query($pending_query);
             background-color: var(--light-gray);
             color: #333;
         }
-        .low-stock { background-color: #ffdddd; }
-        .zero-stock { background-color: #ff9999; }
 
         .dashboard-container {
             display: flex;
@@ -151,45 +146,62 @@ $pending_result = $conn->query($pending_query);
             opacity: 0.8;
         }
 
-
-        .main-content {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 30px;
-            background-color: #ffffff;
-        }
-
-        .card {
-            border-radius: 15px;
+        .table-reservations {
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
         }
 
-        .card-title {
-            font-size: 20px;
-            margin-bottom: 15px;
+        .table-reservations thead {
+            background-color: var(--primary-red);
+            color: var(--white);
+            text-transform: uppercase;
+            font-size: 0.9rem;
         }
 
-        .stat-item {
-            margin-bottom: 10px;
+        .table-reservations th {
+            padding: 15px;
+            vertical-align: middle;
         }
 
-        .low-stock {
-            background-color: #ffdddd;
-            padding: 5px;
-            border-radius: 5px;
+        .table-reservations td {
+            padding: 15px;
+            vertical-align: middle;
+            transition: background-color 0.3s ease;
         }
 
-        .zero-stock {
-            background-color: #ff9999;
-            padding: 5px;
-            border-radius: 5px;
+        .table-reservations tbody tr {
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .table-reservations tbody tr:hover {
+            background-color: rgba(139, 0, 0, 0.05);
+        }
+
+        .reservation-actions .btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8rem;
+            padding: 6px 10px;
+        }
+
+        .table-reservations .badge {
+            font-size: 0.7rem;
+            padding: 3px 6px;
+        }
+
+        .empty-reservations {
+            background-color: var(--white);
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: var(--soft-shadow);
         }
     </style>
-</head>
 <body>
     <div class="dashboard-container">
+        <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
                 EVSU-RESERVE
@@ -208,10 +220,14 @@ $pending_result = $conn->query($pending_query);
             </a>
         </div>
 
+        <div class="main-content container-fluid p-4">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="mb-4">
+                    <i class="fas fa-calendar-alt text-danger"></i> Pending Reservations
+                </h2>
 
-        <div class="main-content container-fluid">
-            <h2 class="my-4">Reservations</h2>
-            <?php if(isset($success_message)): ?>
+                <?php if(isset($success_message)): ?>
                     <div class="alert alert-success">
                         <?php echo htmlspecialchars(string: $success_message); ?>
                     </div>
@@ -277,10 +293,34 @@ $pending_result = $conn->query($pending_query);
                         <p class="text-secondary">There are currently no items waiting to be picked up or processed.</p>
                     </div>
                 <?php endif; ?>
+            </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS and dependencies -->
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const successAlert = document.querySelector('.alert-success');
+        const errorAlert = document.querySelector('.alert-danger');
+        
+        if (successAlert) {
+            setTimeout(() => {
+                successAlert.style.transition = 'opacity 0.5s ease';
+                successAlert.style.opacity = '0';
+                setTimeout(() => successAlert.remove(), 500);
+            }, 2000);
+        }
+        
+        if (errorAlert) {
+            setTimeout(() => {
+                errorAlert.style.transition = 'opacity 0.5s ease';
+                errorAlert.style.opacity = '0';
+                setTimeout(() => errorAlert.remove(), 500);
+            }, 2000);
+        }
+    });
+</script>
 </body>
 </html>
