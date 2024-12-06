@@ -10,7 +10,6 @@ try {
         throw new Exception("Reference number is missing");
     }
 
-    // Check if we have the payment data in session
     if (!isset($_SESSION['payments'][$reference])) {
         throw new Exception("No payment data found for reference: " . $reference);
     }
@@ -18,17 +17,14 @@ try {
     $payment_data = $_SESSION['payments'][$reference];
     $checkout_session_id = $payment_data['checkout_session_id'];
 
-    // PayMongo API endpoint for retrieving checkout session
     $url = "https://api.paymongo.com/v1/checkout_sessions/" . $checkout_session_id;
 
-    // Initialize cURL
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Authorization: Basic ' . base64_encode('sk_test_XhhSeNsJTpZVbwCstLAJBzso')
     ]);
 
-    // Execute cURL request
     $response = curl_exec($ch);
     if (curl_errno($ch)) {
         $curl_error = curl_error($ch);
@@ -37,11 +33,9 @@ try {
     }
     curl_close($ch);
 
-    // Parse response
     $result = json_decode($response, true);
     file_put_contents($log_file, "API Response: " . json_encode($result) . "\n", FILE_APPEND);
 
-    // Check payment status
     $payment_success = false;
     
     if (isset($result['data']['attributes']['payment_intent']['attributes']['status']) 
@@ -56,11 +50,9 @@ try {
     }
 
     if ($payment_success) {
-        // Start transaction
         $conn->begin_transaction();
         
         try {
-            // 1. Create new reservation
             $stmt = $conn->prepare("INSERT INTO reservations (item_id, user_id, reserved_quantity, down_payment, status, reserved_by_username) VALUES (?, ?, ?, ?, 'Pending', ?)");
             $stmt->bind_param("iiids", 
                 $payment_data['item_id'],
@@ -72,7 +64,6 @@ try {
             $stmt->execute();
             $reservation_id = $conn->insert_id;
 
-            // 2. Create the payment record
             $payment = $result['data']['attributes']['payments'][0]['attributes'];
             $amount = $payment['amount'] / 100; // Convert from cents
             
@@ -84,7 +75,6 @@ try {
             );
             $stmt->execute();
             
-            // 3. Update inventory quantity
             $stmt = $conn->prepare("UPDATE inventory SET quantity = quantity - ? WHERE item_id = ?");
             $stmt->bind_param("ii", 
                 $payment_data['quantity'],
@@ -92,13 +82,11 @@ try {
             );
             $stmt->execute();
             
-            // If everything is successful, commit the transaction
             $conn->commit();
             
             $_SESSION['payment_status'] = 'success';
             $_SESSION['payment_message'] = 'Payment processed successfully and reservation created';
             
-            // Log success
             $log_message = sprintf(
                 "Payment successful - Reference: %s - Item: %s - Quantity: %s - Amount: %s - Payment ID: %s - Reservation ID: %s\n",
                 $reference,
@@ -122,7 +110,6 @@ try {
             ];
             
         } catch (Exception $e) {
-            // If there's any error, roll back the transaction
             $conn->rollback();
             throw new Exception("Database error: " . $e->getMessage());
         }
@@ -134,7 +121,6 @@ try {
         file_put_contents($log_file, "Payment failed - Reference: {$reference} - Reason: {$reason}\n", FILE_APPEND);
     }
 
-    // Clean up the payment data from session
     unset($_SESSION['payments'][$reference]);
 
 } catch (Exception $e) {

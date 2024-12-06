@@ -1,15 +1,12 @@
 <?php
 session_start();
-// Enhanced security checks
 if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id']) || $_SESSION['role'] !== 'Student') {
-    // More strict redirection and session invalidation
     session_unset();
     session_destroy();
     header("Location: ../auth/Login.php");
     exit();
 }
 
-// Prevent direct file access
 if (!defined('APP_RUNNING')) {
     define('APP_RUNNING', true);
 }
@@ -17,27 +14,24 @@ if (!defined('APP_RUNNING')) {
 include_once('../includes/header.php');
 require_once('../config/database.php');
 
-// Enhanced error handling
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 try {
-    // Prepared statement for user data retrieval
     $stmt = $conn->prepare("SELECT created_at, email FROM users WHERE user_id = ? LIMIT 1");
     $stmt->bind_param("i", $_SESSION['user_id']);
     $stmt->execute();
     $result = $stmt->get_result();
-
+    
     if ($result->num_rows === 0) {
         throw new Exception("User not found");
     }
-
+    
     $userData = $result->fetch_assoc();
     $formatted_date = date('F j, Y', strtotime($userData['created_at']));
     $email = htmlspecialchars($userData['email'], ENT_QUOTES, 'UTF-8');
-
+    
     $stmt->close();
 } catch (Exception $e) {
-    // Log error and redirect with generic message
     error_log("Dashboard Error: " . $e->getMessage());
     $formatted_date = 'Date unavailable';
     $email = 'Email unavailable';
@@ -49,14 +43,10 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVSU-RESERVE Student Dashboard</title>
-    <!-- Preload critical resources -->
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style">
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" as="style">
-    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    
-    <!-- Inline critical CSS to improve initial load performance -->
     <style>
         :root {
             --primary-red: #8B0000;
@@ -76,7 +66,6 @@ try {
             min-height: 100vh;
         }
 
-        /* Sidebar Styles */
         .sidebar {
             width: 250px;
             background-color: var(--primary-red);
@@ -117,7 +106,6 @@ try {
             transform: translateX(5px);
         }
 
-        /* Main Content Styles */
         .main-content {
             flex-grow: 1;
             margin-left: 250px;
@@ -143,10 +131,6 @@ try {
             color: #666;
             font-size: 14px;    
             margin: 0;
-        }
-
-        .accordion {
-            margin-bottom: 30px;
         }
 
         .accordion-button:not(.collapsed) {
@@ -203,12 +187,34 @@ try {
             color: #666;
             margin-bottom: 10px;
         }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            
+            .main-content {
+                margin-left: 200px;
+            }
+
+            .items-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
     </style>
 </head>
-
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">EVSU-RESERVE - STUDENT</div>
             <a href="dashboard.php" class="nav-button"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
@@ -216,27 +222,21 @@ try {
             <a href="reservation.php" class="nav-button"><i class="fas fa-calendar-alt"></i> My Reservation</a>
             <a href="payment_history.php" class="nav-button"><i class="fas fa-money-bill-wave"></i> Payment History</a>
             <a href="support.php" class="nav-button"><i class="fas fa-headset"></i> Support</a>
-            <a href="../auth/Logout.php" class="nav-button" style="margin-top: auto;"><i
-                    class="fas fa-sign-out-alt"></i> Exit</a>
+            <a href="../auth/Logout.php" class="nav-button" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i> Exit</a>
         </div>
 
-        <!-- Main Content -->
         <div class="main-content">
-
-            <div class="accordion" id="accordionPanelsStayOpenExample">
+            <div class="accordion mb-4">
                 <div class="accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true"
-                            aria-controls="panelsStayOpen-collapseOne">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne">
                             Recent Announcements
                         </button>
                     </h2>
                     <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show">
                         <div class="accordion-body">
                             <strong>Important Update:</strong>
-                            <p>Welcome to the new EVSU-RESERVE system! We've made several improvements to enhance your
-                                reservation experience:</p>
+                            <p>Welcome to the new EVSU-RESERVE system! We've made several improvements:</p>
                             <ul>
                                 <li>Streamlined reservation process</li>
                                 <li>Real-time inventory updates</li>
@@ -247,51 +247,52 @@ try {
                     </div>
                 </div>
             </div>
-            <div class="welcome-section">
-            <p class="creation-date">Created at: <?= $formatted_date ?></p>
 
-                <h1 class="welcome-header">
-                    Welcome <?= htmlspecialchars($_SESSION['username'] ?? 'Student', ENT_QUOTES, 'UTF-8') ?>!
-                </h1>
+            <div class="welcome-section">
+                <p class="creation-date">Created at: <?= $formatted_date ?></p>
+                <h1 class="welcome-header">Welcome <?= htmlspecialchars($_SESSION['username'] ?? 'Student', ENT_QUOTES, 'UTF-8') ?>!</h1>
                 <p class="email-address"><?= $email ?></p>
 
-
-
-
-
                 <div class="newly-added-section">
-                <h2 class="newly-added-header">Newly Added Items</h2>
-                <div class="items-grid">
-                    <?php
-                    try {
-                        // Use prepared statement for inventory query
-                        $inventoryStmt = $conn->prepare("SELECT name, description, quantity, amount FROM inventory ORDER BY created_at DESC LIMIT 3");
-                        $inventoryStmt->execute();
-                        $result = $inventoryStmt->get_result();
+                    <h2 class="newly-added-header">Newly Added Items</h2>
+                    <div class="items-grid">
+                        <?php
+                        try {
+                            $inventoryStmt = $conn->prepare("SELECT name, description, quantity, amount, image_url FROM inventory WHERE deleted = FALSE ORDER BY created_at DESC LIMIT 3");
+                            $inventoryStmt->execute();
+                            $result = $inventoryStmt->get_result();
 
-                        while ($row = $result->fetch_assoc()) {
-                            echo "<div class='item-card'>";
-                            echo "<h3>" . htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8') . "</h3>";
-                            echo "<p>" . htmlspecialchars($row['description'], ENT_QUOTES, 'UTF-8') . "</p>";
-                            echo "<p><strong>Quantity:</strong> " . intval($row['quantity']) . "</p>";
-                            echo "<p><strong>Price:</strong> ₱" . number_format($row['amount'], 2) . "</p>";
-                            echo "<p><strong>Status:</strong> " . (intval($row['quantity']) > 0 ? 'Available' : 'Out of Stock') . "</p>";
-                            echo "</div>";
+                            while ($row = $result->fetch_assoc()) {
+                                echo "<div class='item-card'>";
+                                if (!empty($row['image_url']) && file_exists("../" . $row['image_url'])) {
+                                    echo "<img src='../" . htmlspecialchars($row['image_url'], ENT_QUOTES, 'UTF-8') . "' 
+                                         alt='" . htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8') . "'>";
+                                } else {
+                                    echo "<img src='../staff/uploads/" . basename($row['image_url']) . "' 
+                                    alt='" . htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8') . "'>";
+                                }
+                                echo "<h3>" . htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8') . "</h3>";
+                                echo "<p>" . htmlspecialchars($row['description'], ENT_QUOTES, 'UTF-8') . "</p>";
+                                echo "<p><strong>Quantity:</strong> " . intval($row['quantity']) . "</p>";
+                                echo "<p><strong>Price:</strong> ₱" . number_format($row['amount'], 2) . "</p>";
+                                echo "<p><strong>Status:</strong> " . 
+                                     (intval($row['quantity']) > 0 ? 
+                                     '<span class="text-success">Available</span>' : 
+                                     '<span class="text-danger">Out of Stock</span>') . "</p>";
+                                echo "</div>";
+                            }
+                            $inventoryStmt->close();
+                        } catch (Exception $e) {
+                            error_log("Inventory Fetch Error: " . $e->getMessage());
+                            echo "<p class='text-danger'>Unable to load inventory items</p>";
                         }
-
-                        $inventoryStmt->close();
-                    } catch (Exception $e) {
-                        error_log("Inventory Fetch Error: " . $e->getMessage());
-                        echo "<p class='text-danger'>Unable to load inventory items</p>";
-                    }
-                    ?>
+                        ?>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>

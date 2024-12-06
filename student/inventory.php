@@ -15,11 +15,22 @@ if (isset($_SESSION['payment_status'])) {
     unset($_SESSION['payment_status']);
 }
 
+$search = "";
+if (isset($_GET['search'])) {
+    $search = $conn->real_escape_string($_GET['search']);
+}
+
 $query = "
-    SELECT i.sku, i.name, i.description, i.quantity, i.added_by_username, i.updated_at, i.amount, i.item_id AS item_id
+    SELECT i.sku, i.name, i.description, i.quantity, i.added_by_username, i.updated_at, i.amount, i.item_id AS item_id, i.image_url
     FROM inventory i
-    ORDER BY i.name
+    WHERE i.deleted = FALSE
 ";
+
+if (!empty($search)) {
+    $query .= " AND (i.name LIKE '%$search%' OR i.sku LIKE '%$search%')";
+}
+
+$query .= " ORDER BY i.name";
 
 $result = $conn->query($query);
 ?>
@@ -37,6 +48,7 @@ $result = $conn->query($query);
             --primary-red: #8B0000;
             --accent-yellow: #FFD700;
             --light-gray: #f5f5f5;
+            --card-transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         body {
@@ -114,61 +126,64 @@ $result = $conn->query($query);
             margin-bottom: 25px;
             display: flex;
             padding: 15px;
+        }
 
+        /* Inventory Cards Styles */
+        .inventory-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
         }
 
         .inventory-card {
             background-color: white;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: var(--card-transition);
+            display: flex;
+            flex-direction: column;
         }
 
-        .table {
-            margin-bottom: 0;
+        .inventory-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
-        .table thead th {
-            background-color: var(--primary-red);
-            color: white;
-            border: none;
+        .inventory-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
         }
 
-        .table tbody tr:hover {
-            background-color: rgba(139, 0, 0, 0.05);
+        .card-body {
+            padding: 15px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
         }
 
-        .btn-primary {
-            background-color: var(--primary-red);
-            border-color: var(--primary-red);
-        }
-
-        .btn-primary:hover {
-            background-color: #660000;
-            border-color: #660000;
-        }
-
-        .btn-outline-secondary {
+        .card-title {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            font-weight: bold;
             color: var(--primary-red);
-            border-color: var(--primary-red);
         }
 
-        .btn-outline-secondary:hover {
-            background-color: var(--primary-red);
-            color: white;
-        }
-
-        .modal-header {
-            background-color: var(--primary-red);
-            color: white;
-        }
-
-        .modal-header .btn-close {
-            color: white;
+        .card-text {
+            flex-grow: 1;
+            font-size: 0.95rem;
+            color: #555;
         }
 
         .badge {
-            padding: 8px 12px;
+            padding: 5px 10px;
             border-radius: 15px;
+            font-size: 0.85rem;
+        }
+
+        .btn-group {
+            margin-top: 10px;
         }
 
         .alert {
@@ -189,8 +204,33 @@ $result = $conn->query($query);
             color: #721c24;
         }
 
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
 
-        /* Main Content Styles */
+            .nav-button {
+                width: 80%;
+                padding: 10px 12px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .dashboard-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
     </style>
 </head>
 
@@ -222,14 +262,14 @@ $result = $conn->query($query);
             <?php endif; ?>
 
             <div class="search-card">
-                <div class="card-body">
+                <div class="card-body w-100">
                     <form method="GET" class="row g-3">
                         <div class="col-md-7">
                             <div class="input-group">
                                 <input type="text" class="form-control" placeholder="Search by name or SKU"
-                                    name="search" value="<?php echo $_GET['search'] ?? ''; ?>">
+                                    name="search" value="<?php echo htmlspecialchars($search); ?>">
                                 <button class="btn btn-outline-secondary" type="submit">
-                                    <i class="bi bi-search"></i> Search
+                                    <i class="fas fa-search"></i> Search
                                 </button>
                             </div>
                         </div>
@@ -237,51 +277,45 @@ $result = $conn->query($query);
                 </div>
             </div>
 
-            <div class="inventory-card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>SKU</th>
-                                    <th>Name</th>
-                                    <th>Description</th>
-                                    <th>Quantity</th>
-                                    <th>Amount</th>
-                                    <th>Added By</th>
-                                    <th>Last Updated</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while ($row = $result->fetch_assoc()): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($row['sku']); ?></td>
-                                        <td><?php echo htmlspecialchars($row['name']); ?></td>
-                                        <td><?php echo htmlspecialchars($row['description']); ?></td>
-                                        <td>
-                                            <span
-                                                class="badge bg-<?php echo $row['quantity'] > 0 ? 'success' : 'danger'; ?>">
-                                                <?php echo $row['quantity']; ?> available
-                                            </span>
-                                        </td>
-                                        <td><?php echo htmlspecialchars($row['amount']); ?> PHP</td>
-                                        <td><?php echo htmlspecialchars($row['added_by_username']); ?></td>
-                                        <td><?php echo date('M d, Y H:i', strtotime($row['updated_at'])); ?></td>
-                                        <td>
-                                            <div class="btn-group">
-                                                <button type="button" class="btn btn-sm btn-outline-success"
-                                                    onclick="reserveItem(<?php echo $row['item_id']; ?>, '<?php echo htmlspecialchars($row['name']); ?>')">
-                                                    <i class="bi bi-bookmark"></i> Reserve
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="inventory-cards">
+                <?php if ($result->num_rows > 0): ?>
+                    <?php while ($row = $result->fetch_assoc()): ?>
+                        <div class="inventory-card">
+                            <?php if (!empty($row['image_url']) && filter_var($row['image_url'], FILTER_VALIDATE_URL)): ?>
+                                <img src="<?php echo htmlspecialchars($row['image_url']); ?>" alt="<?php echo htmlspecialchars($row['name']); ?>">
+                            <?php else: ?>
+                                <img src="../staff/uploads/<?php echo basename($row['image_url']); ?>" alt="<?php echo htmlspecialchars($row['name']); ?>">
+                            <?php endif; ?>
+                            <div class="card-body">
+                                <h5 class="card-title"><?php echo htmlspecialchars($row['name']); ?></h5>
+                                <p class="card-text"><?php echo htmlspecialchars(substr($row['description'], 0, 100)) . (strlen($row['description']) > 100 ? '...' : ''); ?></p>
+                                <div class="mb-2">
+                                    <span
+                                        class="badge bg-<?php echo $row['quantity'] > 0 ? 'success' : 'danger'; ?>">
+                                        <?php echo $row['quantity']; ?> <?php echo $row['quantity'] > 1 ? 'available' : 'available'; ?>
+                                    </span>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Amount: </strong><?php echo htmlspecialchars($row['amount']); ?> PHP
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Added By: </strong><?php echo htmlspecialchars($row['added_by_username']); ?>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Last Updated: </strong><?php echo date('M d, Y H:i', strtotime($row['updated_at'])); ?>
+                                </div>
+                                <div class="btn-group mt-auto">
+                                    <button type="button" class="btn btn-sm btn-outline-success w-100"
+                                        onclick="reserveItem(<?php echo $row['item_id']; ?>, '<?php echo htmlspecialchars(addslashes($row['name'])); ?>')">
+                                        <i class="fas fa-bookmark"></i> Reserve
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <p class="text-center">No inventory items found.</p>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -321,109 +355,107 @@ $result = $conn->query($query);
     <script src="https://js.paymongo.com/v1/payment.js"></script>
 
     <script>
-let reservationModal;
-let currentItemId = 0;
+        let reservationModal;
+        let currentItemId = 0;
 
-document.addEventListener('DOMContentLoaded', function () {
-    // Initialize the modal
-    reservationModal = new bootstrap.Modal(document.getElementById('reservationModal'));
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize the modal
+            reservationModal = new bootstrap.Modal(document.getElementById('reservationModal'));
 
-    // Form submission handler
-    document.getElementById('paymentForm').addEventListener('submit', async function (e) {
-        e.preventDefault();
-        const payButton = document.getElementById('payButton');
-        const errorDiv = document.getElementById('error');
-        const quantityInput = document.getElementById('quantity');
+            // Form submission handler
+            document.getElementById('paymentForm').addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const payButton = document.getElementById('payButton');
+                const errorDiv = document.getElementById('error');
+                const quantityInput = document.getElementById('quantity');
 
-        // Basic validation
-        if (!quantityInput.value || quantityInput.value < 1) {
-            errorDiv.textContent = 'Please enter a valid quantity';
-            errorDiv.classList.remove('d-none');
-            return;
-        }
+                // Basic validation
+                if (!quantityInput.value || quantityInput.value < 1) {
+                    errorDiv.textContent = 'Please enter a valid quantity';
+                    errorDiv.classList.remove('d-none');
+                    return;
+                }
 
-        payButton.disabled = true;
-        payButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
-        errorDiv.classList.add('d-none');
+                payButton.disabled = true;
+                payButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                errorDiv.classList.add('d-none');
 
-        try {
-            const quantity = parseInt(quantityInput.value);
-            const amount = 100; // Fixed fee of 100 pesos
+                try {
+                    const quantity = parseInt(quantityInput.value);
+                    const amount = 100; // Fixed fee of 100 pesos
 
-            const response = await fetch('create_payment.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    itemId: currentItemId,
-                    quantity: quantity,
-                    amount: amount
-                })
+                    const response = await fetch('create_payment.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            itemId: currentItemId,
+                            quantity: quantity,
+                            amount: amount
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Payment initialization failed');
+                    }
+
+                    if (data.success && data.checkoutUrl) {
+                        // Save form data to session storage before redirect
+                        sessionStorage.setItem('lastPaymentAttempt', JSON.stringify({
+                            itemId: currentItemId,
+                            quantity: quantity,
+                            amount: amount,
+                            timestamp: new Date().toISOString()
+                        }));
+
+                        // Redirect to PayMongo checkout URL
+                        window.location.href = data.checkoutUrl;
+                    } else {
+                        throw new Error(data.error || 'Failed to create payment session');
+                    }
+                } catch (error) {
+                    errorDiv.textContent = error.message;
+                    errorDiv.classList.remove('d-none');
+                    payButton.disabled = false;
+                    payButton.textContent = 'Proceed to Payment';
+                }
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Payment initialization failed');
+            // Handle payment status messages
+            const alertElement = document.querySelector('.alert');
+            if (alertElement) {
+                setTimeout(() => {
+                    const bsAlert = new bootstrap.Alert(alertElement);
+                    bsAlert.close();
+                }, 5000);
             }
 
-            if (data.success && data.checkoutUrl) {
-                // Save form data to session storage before redirect
-                sessionStorage.setItem('lastPaymentAttempt', JSON.stringify({
-                    itemId: currentItemId,
-                    quantity: quantity,
-                    amount: amount,
-                    timestamp: new Date().toISOString()
-                }));
+            // Quantity change handler - always show fixed fee regardless of quantity
+            document.getElementById('quantity').addEventListener('input', function (e) {
+                document.getElementById('amount').value = '100.00 PHP';
+            });
+        });
 
-                // Redirect to PayMongo checkout URL
-                window.location.href = data.checkoutUrl;
-            } else {
-                throw new Error(data.error || 'Failed to create payment session');
-            }
-        } catch (error) {
-            errorDiv.textContent = error.message;
-            errorDiv.classList.remove('d-none');
+        // Function to open the reservation modal
+        function reserveItem(itemId, itemName) {
+            currentItemId = itemId;
+
+            document.getElementById('itemId').value = itemId;
+            document.getElementById('itemName').textContent = 'Reserve Item: ' + itemName;
+            document.getElementById('quantity').value = 1;
+            document.getElementById('amount').value = '100.00 PHP';
+
+            // Reset error message and button state
+            document.getElementById('error').classList.add('d-none');
+            const payButton = document.getElementById('payButton');
             payButton.disabled = false;
             payButton.textContent = 'Proceed to Payment';
+
+            reservationModal.show();
         }
-    });
-
-    // Handle payment status messages
-    const alertElement = document.querySelector('.alert');
-    if (alertElement) {
-        setTimeout(() => {
-            const bsAlert = new bootstrap.Alert(alertElement);
-            bsAlert.close();
-        }, 5000);
-    }
-    
-
-
-    // Quantity change handler - always show fixed fee regardless of quantity
-    document.getElementById('quantity').addEventListener('input', function (e) {
-        document.getElementById('amount').value = '100.00 PHP';
-    });
-});
-
-// Function to open the reservation modal
-function reserveItem(itemId, itemName) {
-    currentItemId = itemId;
-
-    document.getElementById('itemId').value = itemId;
-    document.getElementById('itemName').textContent = 'Reserve Item: ' + itemName;
-    document.getElementById('quantity').value = 1;
-    document.getElementById('amount').value = '100.00 PHP';
-
-    // Reset error message and button state
-    document.getElementById('error').classList.add('d-none');
-    const payButton = document.getElementById('payButton');
-    payButton.disabled = false;
-    payButton.textContent = 'Proceed to Payment';
-
-    reservationModal.show();
-}
     </script>
 
 </body>
