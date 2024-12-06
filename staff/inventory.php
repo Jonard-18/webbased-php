@@ -108,33 +108,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['edit_item'])) {
         $item_id = $_POST['item_id'];
         $name = $_POST['name'];
-        // $sku = $_POST['sku']; // SKU is auto-generated; typically not editable
         $description = $_POST['description'];
         $quantity = $_POST['quantity'];
         $amount = $_POST['amount'];
 
-        // Handle image upload
-        $image_url = null;
+        // First, get the current image URL
+        $stmt_current = $conn->prepare("SELECT image_url FROM inventory WHERE item_id = ?");
+        $stmt_current->bind_param("i", $item_id);
+        $stmt_current->execute();
+        $result_current = $stmt_current->get_result();
+        $current_data = $result_current->fetch_assoc();
+        $current_image = $current_data['image_url'];
+        $stmt_current->close();
+
+        $image_url = $current_image; // Default to current image
+
+        // Handle new image upload if provided
         if (isset($_FILES['image']) && $_FILES['image']['error'] != UPLOAD_ERR_NO_FILE) {
             $upload_result = upload_image($_FILES['image']);
             if ($upload_result['success']) {
+                // Delete old image if it exists
+                if ($current_image && file_exists($current_image)) {
+                    unlink($current_image);
+                }
                 $image_url = $upload_result['path'];
             } else {
-                // Handle upload error
                 echo "<div class='alert alert-danger'>{$upload_result['error']}</div>";
-                // Optionally, you might want to exit or continue without image
+                // Continue with update even if image upload fails
             }
         }
 
-        // If image is uploaded, include it in the update
-        if ($image_url) {
-            $stmt = $conn->prepare("UPDATE inventory SET name=?, description=?, quantity=?, amount=?, image_url=? WHERE item_id=?");
-            $stmt->bind_param("ssidis", $name, $description, $quantity, $amount, $image_url, $item_id);
-        } else {
-            // Update without changing the image
-            $stmt = $conn->prepare("UPDATE inventory SET name=?, description=?, quantity=?, amount=? WHERE item_id=?");
-            $stmt->bind_param("ssidi", $name, $description, $quantity, $amount, $item_id);
-        }
+        // Always include image_url in update
+        $stmt = $conn->prepare("UPDATE inventory SET name=?, description=?, quantity=?, amount=?, image_url=? WHERE item_id=?");
+        $stmt->bind_param("ssiisi", $name, $description, $quantity, $amount, $image_url, $item_id);
 
         if($stmt->execute()){
             header("Location: inventory.php?msg=Item+updated+successfully");
@@ -144,6 +150,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         $stmt->close();
     }
+
+
 
     // Deleting an item
     if (isset($_POST['delete_item'])) {

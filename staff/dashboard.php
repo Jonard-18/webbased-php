@@ -17,7 +17,7 @@ function getInventoryStatistics($conn) {
     $total_result = $conn->query($total_query);
     $stats['total_items'] = $total_result->fetch_assoc()['total'];
 
-    $low_stock_query = "SELECT COUNT(*) as low_stock FROM inventory WHERE quantity < 5";
+    $low_stock_query = "SELECT COUNT(*) as low_stock FROM inventory WHERE quantity < 10";
     $low_stock_result = $conn->query($low_stock_query);
     $stats['low_stock_items'] = $low_stock_result->fetch_assoc()['low_stock'];
 
@@ -54,10 +54,10 @@ function getReservationStatistics($conn) {
 $inventory_stats = getInventoryStatistics($conn);
 $reservation_stats = getReservationStatistics($conn);
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- [Keep your existing head content] -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVSU-RESERVE Dashboard</title>
@@ -65,6 +65,7 @@ $reservation_stats = getReservationStatistics($conn);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        /* [Keep your existing styles] */
         :root {
             --primary-red: #8B0000;
             --accent-yellow: #FFD700;
@@ -78,6 +79,8 @@ $reservation_stats = getReservationStatistics($conn);
             background-color: var(--light-gray);
             color: #333;
         }
+        .low-stock { background-color: #ffdddd; }
+        .zero-stock { background-color: #ff9999; }
 
         .dashboard-container {
             display: flex;
@@ -132,53 +135,45 @@ $reservation_stats = getReservationStatistics($conn);
             opacity: 0.8;
         }
 
+
         .main-content {
             flex-grow: 1;
             overflow-y: auto;
             padding: 30px;
-            background-color: var(--light-gray);
+            background-color: #ffffff;
         }
 
         .card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: var(--soft-shadow);
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
             margin-bottom: 20px;
-            transition: transform 0.3s ease;
         }
 
-        .card:hover {
-            transform: scale(1.02);
+        .card-title {
+            font-size: 20px;
+            margin-bottom: 15px;
         }
 
-        .card-header {
-            background: linear-gradient(45deg, #007bff, #3498db);
-            color: white;
-            border-top-left-radius: 12px;
-            border-top-right-radius: 12px;
-            display: flex;
-            align-items: center;
+        .stat-item {
+            margin-bottom: 10px;
         }
 
-        .card-header i {
-            margin-right: 10px;
+        .low-stock {
+            background-color: #ffdddd;
+            padding: 5px;
+            border-radius: 5px;
         }
 
-        .statistic-value {
-            font-size: 2rem;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .statistic-label {
-            color: #6c757d;
-            font-size: 0.9rem;
+        .zero-stock {
+            background-color: #ff9999;
+            padding: 5px;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
                 EVSU-RESERVE
@@ -195,69 +190,37 @@ $reservation_stats = getReservationStatistics($conn);
             <a href="../auth/Logout.php" class="nav-button" style="margin-top: auto;">
                 <i class="fas fa-sign-out-alt"></i> Exit
             </a>
-
         </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <div class="container-fluid">
-                <h1 class="mb-4">Dashboard Overview</h1>
-                
-                <div class="row">
-                    <!-- Inventory Statistics Card -->
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <i class="fas fa-box"></i>Inventory Statistics
-                            </div>
-                            <div class="card-body">
-                                <div class="row text-center">
-                                    <div class="col-4">
-                                        <div class="statistic-value"><?php echo $inventory_stats['total_items']; ?></div>
-                                        <div class="statistic-label">Total Items</div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="statistic-value text-warning"><?php echo $inventory_stats['low_stock_items']; ?></div>
-                                        <div class="statistic-label">Low Stock</div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="statistic-value text-danger"><?php echo $inventory_stats['out_of_stock_items']; ?></div>
-                                        <div class="statistic-label">Out of Stock</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Reservation Statistics Card -->
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header bg-success">
-                                <i class="fas fa-calendar-alt"></i>Reservation Statistics
-                            </div>
-                            <div class="card-body">
-                                <div class="row text-center">
-                                    <div class="col-4">
-                                        <div class="statistic-value"><?php echo $reservation_stats['total_reservations']; ?></div>
-                                        <div class="statistic-label">Total Reservations</div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="statistic-value text-warning"><?php echo $reservation_stats['pending_reservations']; ?></div>
-                                        <div class="statistic-label">Pending</div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="statistic-value text-success"><?php echo $reservation_stats['fulfilled_reservations']; ?></div>
-                                        <div class="statistic-label">Fulfilled</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+        <div class="main-content container-fluid">
+            <h2 class="my-4">Dashboard</h2>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <h5 class="card-title">Inventory Statistics</h5>
+                        <div class="stat-item">Total Items: <?php echo $inventory_stats['total_items']; ?></div>
+                        <div class="stat-item low-stock">Low Stock Items: <?php echo $inventory_stats['low_stock_items']; ?></div>
+                        <div class="stat-item zero-stock">Out of Stock Items: <?php echo $inventory_stats['out_of_stock_items']; ?></div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <h5 class="card-title">Reservation Statistics</h5>
+                        <div class="stat-item">Total Reservations: <?php echo $reservation_stats['total_reservations']; ?></div>
+                        <div class="stat-item">Pending Reservations: <?php echo $reservation_stats['pending_reservations']; ?></div>
+                        <div class="stat-item">Fulfilled Reservations: <?php echo $reservation_stats['fulfilled_reservations']; ?></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

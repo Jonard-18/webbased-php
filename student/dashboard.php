@@ -21,15 +21,15 @@ try {
     $stmt->bind_param("i", $_SESSION['user_id']);
     $stmt->execute();
     $result = $stmt->get_result();
-    
+
     if ($result->num_rows === 0) {
         throw new Exception("User not found");
     }
-    
+
     $userData = $result->fetch_assoc();
     $formatted_date = date('F j, Y', strtotime($userData['created_at']));
     $email = htmlspecialchars($userData['email'], ENT_QUOTES, 'UTF-8');
-    
+
     $stmt->close();
 } catch (Exception $e) {
     error_log("Dashboard Error: " . $e->getMessage());
@@ -39,6 +39,7 @@ try {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -127,9 +128,10 @@ try {
             font-weight: bold;
         }
 
-        .creation-date, .email-address {
+        .creation-date,
+        .email-address {
             color: #666;
-            font-size: 14px;    
+            font-size: 14px;
             margin: 0;
         }
 
@@ -192,7 +194,7 @@ try {
             .sidebar {
                 width: 200px;
             }
-            
+
             .main-content {
                 margin-left: 200px;
             }
@@ -206,13 +208,14 @@ try {
             .sidebar {
                 display: none;
             }
-            
+
             .main-content {
                 margin-left: 0;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="dashboard-container">
         <div class="sidebar">
@@ -222,14 +225,16 @@ try {
             <a href="reservation.php" class="nav-button"><i class="fas fa-calendar-alt"></i> My Reservation</a>
             <a href="payment_history.php" class="nav-button"><i class="fas fa-money-bill-wave"></i> Payment History</a>
             <a href="support.php" class="nav-button"><i class="fas fa-headset"></i> Support</a>
-            <a href="../auth/Logout.php" class="nav-button" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i> Exit</a>
+            <a href="../auth/Logout.php" class="nav-button" style="margin-top: auto;"><i
+                    class="fas fa-sign-out-alt"></i> Exit</a>
         </div>
 
         <div class="main-content">
             <div class="accordion mb-4">
                 <div class="accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#panelsStayOpen-collapseOne">
                             Recent Announcements
                         </button>
                     </h2>
@@ -250,7 +255,8 @@ try {
 
             <div class="welcome-section">
                 <p class="creation-date">Created at: <?= $formatted_date ?></p>
-                <h1 class="welcome-header">Welcome <?= htmlspecialchars($_SESSION['username'] ?? 'Student', ENT_QUOTES, 'UTF-8') ?>!</h1>
+                <h1 class="welcome-header">Welcome
+                    <?= htmlspecialchars($_SESSION['username'] ?? 'Student', ENT_QUOTES, 'UTF-8') ?>!</h1>
                 <p class="email-address"><?= $email ?></p>
 
                 <div class="newly-added-section">
@@ -275,10 +281,10 @@ try {
                                 echo "<p>" . htmlspecialchars($row['description'], ENT_QUOTES, 'UTF-8') . "</p>";
                                 echo "<p><strong>Quantity:</strong> " . intval($row['quantity']) . "</p>";
                                 echo "<p><strong>Price:</strong> ₱" . number_format($row['amount'], 2) . "</p>";
-                                echo "<p><strong>Status:</strong> " . 
-                                     (intval($row['quantity']) > 0 ? 
-                                     '<span class="text-success">Available</span>' : 
-                                     '<span class="text-danger">Out of Stock</span>') . "</p>";
+                                echo "<p><strong>Status:</strong> " .
+                                    (intval($row['quantity']) > 0 ?
+                                        '<span class="text-success">Available</span>' :
+                                        '<span class="text-danger">Out of Stock</span>') . "</p>";
                                 echo "</div>";
                             }
                             $inventoryStmt->close();
@@ -295,4 +301,5 @@ try {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
