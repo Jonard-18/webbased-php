@@ -204,6 +204,60 @@ $result = $conn->query($query);
             color: #721c24;
         }
 
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .action-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            width: 100%;
+            border: 2px solid transparent;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .reserve-button {
+            background-color: #198754;
+            color: white;
+            border-color: #198754;
+        }
+
+        .reserve-button:hover {
+            background-color: #157347;
+            border-color: #157347;
+            transform: translateY(-2px);
+        }
+
+        .view-details-button {
+            background-color: transparent;
+            color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        .view-details-button:hover {
+            background-color: #0d6efd;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .button-icon {
+            font-size: 14px;
+        }
+
+        .button-text {
+            font-size: 14px;
+        }
+
         /* Responsive Adjustments */
         @media (max-width: 768px) {
             .sidebar {
@@ -282,17 +336,21 @@ $result = $conn->query($query);
                     <?php while ($row = $result->fetch_assoc()): ?>
                         <div class="inventory-card">
                             <?php if (!empty($row['image_url']) && filter_var($row['image_url'], FILTER_VALIDATE_URL)): ?>
-                                <img src="<?php echo htmlspecialchars($row['image_url']); ?>" alt="<?php echo htmlspecialchars($row['name']); ?>">
+                                <img src="<?php echo htmlspecialchars($row['image_url']); ?>"
+                                    alt="<?php echo htmlspecialchars($row['name']); ?>">
                             <?php else: ?>
-                                <img src="../staff/uploads/<?php echo basename($row['image_url']); ?>" alt="<?php echo htmlspecialchars($row['name']); ?>">
+                                <img src="../staff/uploads/<?php echo basename($row['image_url']); ?>"
+                                    alt="<?php echo htmlspecialchars($row['name']); ?>">
                             <?php endif; ?>
                             <div class="card-body">
                                 <h5 class="card-title"><?php echo htmlspecialchars($row['name']); ?></h5>
-                                <p class="card-text"><?php echo htmlspecialchars(substr($row['description'], 0, 100)) . (strlen($row['description']) > 100 ? '...' : ''); ?></p>
+                                <p class="card-text">
+                                    <?php echo htmlspecialchars(substr($row['description'], 0, 100)) . (strlen($row['description']) > 100 ? '...' : ''); ?>
+                                </p>
                                 <div class="mb-2">
-                                    <span
-                                        class="badge bg-<?php echo $row['quantity'] > 0 ? 'success' : 'danger'; ?>">
-                                        <?php echo $row['quantity']; ?> <?php echo $row['quantity'] > 1 ? 'available' : 'available'; ?>
+                                    <span class="badge bg-<?php echo $row['quantity'] > 0 ? 'success' : 'danger'; ?>">
+                                        <?php echo $row['quantity']; ?>
+                                        <?php echo $row['quantity'] > 1 ? 'available' : 'available'; ?>
                                     </span>
                                 </div>
                                 <div class="mb-2">
@@ -302,13 +360,20 @@ $result = $conn->query($query);
                                     <strong>Added By: </strong><?php echo htmlspecialchars($row['added_by_username']); ?>
                                 </div>
                                 <div class="mb-2">
-                                    <strong>Last Updated: </strong><?php echo date('M d, Y H:i', strtotime($row['updated_at'])); ?>
+                                    <strong>Last Updated:
+                                    </strong><?php echo date('M d, Y H:i', strtotime($row['updated_at'])); ?>
                                 </div>
-                                <div class="btn-group mt-auto">
-                                    <button type="button" class="btn btn-sm btn-outline-success w-100"
+                                <div class="button-container">
+                                    <button type="button" class="action-button reserve-button"
                                         onclick="reserveItem(<?php echo $row['item_id']; ?>, '<?php echo htmlspecialchars(addslashes($row['name'])); ?>')">
-                                        <i class="fas fa-bookmark"></i> Reserve
+                                        <i class="fas fa-bookmark button-icon"></i>
+                                        <span class="button-text">Reserve</span>
                                     </button>
+                                    <a href="product_details.php?id=<?php echo $row['item_id']; ?>"
+                                        class="action-button view-details-button">
+                                        <i class="fas fa-eye button-icon"></i>
+                                        <span class="button-text">View Details</span>
+                                    </a>
                                 </div>
                             </div>
                         </div>

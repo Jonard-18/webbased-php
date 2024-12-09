@@ -2,7 +2,7 @@
 $servername = "localhost";
 $username = "root";
 $password = "";
-$dbname = "integrative_final_revision";
+$dbname = "integrative_final";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 
