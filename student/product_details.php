@@ -408,7 +408,7 @@ if (isset($_SESSION['payment_status'])) {
 
                 try {
                     const quantity = parseInt(quantityInput.value);
-                    const amount = 100; // Fixed fee of 100 pesos
+                    const amount = 20; // Fixed fee of 100 pesos
 
                     const response = await fetch('create_payment.php', {
                         method: 'POST',
@@ -461,7 +461,7 @@ if (isset($_SESSION['payment_status'])) {
 
             // Quantity change handler - always show fixed fee regardless of quantity
             document.getElementById('quantity').addEventListener('input', function (e) {
-                document.getElementById('amount').value = '100.00 PHP';
+                document.getElementById('amount').value = '20.00 PHP';
             });
         });
 
@@ -472,7 +472,7 @@ if (isset($_SESSION['payment_status'])) {
             document.getElementById('itemId').value = itemId;
             document.getElementById('itemName').textContent = 'Reserve Item: ' + itemName;
             document.getElementById('quantity').value = 1;
-            document.getElementById('amount').value = '100.00 PHP';
+            document.getElementById('amount').value = '20.00 PHP';
 
             // Reset error message and button state
             document.getElementById('error').classList.add('d-none');

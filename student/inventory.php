@@ -21,10 +21,20 @@ if (isset($_GET['search'])) {
 }
 
 $query = "
-    SELECT i.sku, i.name, i.description, i.quantity, i.added_by_username, i.updated_at, i.amount, i.item_id AS item_id, i.image_url
-    FROM inventory i
-    WHERE i.deleted = FALSE
-";
+    SELECT 
+    i.sku, 
+    i.name, 
+    i.description, 
+    i.quantity, 
+    i.updated_at, 
+    i.amount, 
+    i.item_id AS item_id, 
+    i.image_url
+FROM 
+    inventory i
+WHERE 
+    i.deleted = FALSE 
+    AND i.quantity != 0";
 
 if (!empty($search)) {
     $query .= " AND (i.name LIKE '%$search%' OR i.sku LIKE '%$search%')";
@@ -150,10 +160,39 @@ $result = $conn->query($query);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
-        .inventory-card img {
+        /* New Image Container with Badge */
+        .image-container {
+            position: relative;
+        }
+
+        .image-container img {
             width: 100%;
             height: 180px;
             object-fit: cover;
+            display: block;
+        }
+
+        /* Badge positioned at the top-right corner of the image */
+        .badge-top-right {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            background-color: var(--primary-red); /* Fallback color */
+            color: white;
+            /* Optional: Add a slight shadow for better visibility */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Optional: Different badge colors based on status */
+        .badge-top-right.bg-success {
+            background-color: #28a745; /* Green */
+        }
+
+        .badge-top-right.bg-danger {
+            background-color: #dc3545; /* Red */
         }
 
         .card-body {
@@ -334,32 +373,43 @@ $result = $conn->query($query);
             <div class="inventory-cards">
                 <?php if ($result->num_rows > 0): ?>
                     <?php while ($row = $result->fetch_assoc()): ?>
+                        <?php
+                        // Determine badge label and color based on quantity
+                        if ($row['quantity'] > 5) {
+                            $badgeLabel = 'In Stock';
+                            $badgeClass = 'bg-success';
+                        } elseif ($row['quantity'] > 0) {
+                            $badgeLabel = 'Limited Stock';
+                            $badgeClass = 'bg-warning';
+                        } else {
+                            $badgeLabel = 'Out of Stock';
+                            $badgeClass = 'bg-danger';
+                        }
+
+                        $badgeLabel .= ' (' . $row['quantity'] . ' units)';
+                        ?>
                         <div class="inventory-card">
-                            <?php if (!empty($row['image_url']) && filter_var($row['image_url'], FILTER_VALIDATE_URL)): ?>
-                                <img src="<?php echo htmlspecialchars($row['image_url']); ?>"
-                                    alt="<?php echo htmlspecialchars($row['name']); ?>">
-                            <?php else: ?>
-                                <img src="../staff/uploads/<?php echo basename($row['image_url']); ?>"
-                                    alt="<?php echo htmlspecialchars($row['name']); ?>">
-                            <?php endif; ?>
+                            <div class="image-container">
+                                <?php if (!empty($row['image_url']) && filter_var($row['image_url'], FILTER_VALIDATE_URL)): ?>
+                                    <img src="<?php echo htmlspecialchars($row['image_url']); ?>"
+                                        alt="<?php echo htmlspecialchars($row['name']); ?>">
+                                <?php else: ?>
+                                    <img src="../staff/uploads/<?php echo basename($row['image_url']); ?>"
+                                        alt="<?php echo htmlspecialchars($row['name']); ?>">
+                                <?php endif; ?>
+                                <span class="badge-top-right <?php echo $badgeClass; ?>">
+    <?php echo $badgeLabel; ?>
+</span>
+                            </div>
                             <div class="card-body">
                                 <h5 class="card-title"><?php echo htmlspecialchars($row['name']); ?></h5>
                                 <p class="card-text">
                                     <?php echo htmlspecialchars(substr($row['description'], 0, 100)) . (strlen($row['description']) > 100 ? '...' : ''); ?>
                                 </p>
-                                <div class="mb-2">
-                                    <span class="badge bg-<?php echo $row['quantity'] > 0 ? 'success' : 'danger'; ?>">
-                                        <?php echo $row['quantity']; ?>
-                                        <?php echo $row['quantity'] > 1 ? 'available' : 'available'; ?>
-                                    </span>
-                                </div>
-                                <div class="mb-2">
+                                <div class="mb-1">
                                     <strong>Amount: </strong><?php echo htmlspecialchars($row['amount']); ?> PHP
                                 </div>
-                                <div class="mb-2">
-                                    <strong>Added By: </strong><?php echo htmlspecialchars($row['added_by_username']); ?>
-                                </div>
-                                <div class="mb-2">
+                                <div class="mb-1">
                                     <strong>Last Updated:
                                     </strong><?php echo date('M d, Y H:i', strtotime($row['updated_at'])); ?>
                                 </div>
@@ -447,7 +497,7 @@ $result = $conn->query($query);
 
                 try {
                     const quantity = parseInt(quantityInput.value);
-                    const amount = 100; // Fixed fee of 100 pesos
+                    const amount = 20; // Fixed fee of 100 pesos
 
                     const response = await fetch('create_payment.php', {
                         method: 'POST',
@@ -500,7 +550,7 @@ $result = $conn->query($query);
 
             // Quantity change handler - always show fixed fee regardless of quantity
             document.getElementById('quantity').addEventListener('input', function (e) {
-                document.getElementById('amount').value = '100.00 PHP';
+                document.getElementById('amount').value = '20.00 PHP';
             });
         });
 
@@ -511,7 +561,7 @@ $result = $conn->query($query);
             document.getElementById('itemId').value = itemId;
             document.getElementById('itemName').textContent = 'Reserve Item: ' + itemName;
             document.getElementById('quantity').value = 1;
-            document.getElementById('amount').value = '100.00 PHP';
+            document.getElementById('amount').value = '20.00 PHP';
 
             // Reset error message and button state
             document.getElementById('error').classList.add('d-none');
