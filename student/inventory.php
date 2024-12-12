@@ -180,7 +180,8 @@ $result = $conn->query($query);
             padding: 5px 10px;
             border-radius: 12px;
             font-size: 0.75rem;
-            background-color: var(--primary-red); /* Fallback color */
+            background-color: var(--primary-red);
+            /* Fallback color */
             color: white;
             /* Optional: Add a slight shadow for better visibility */
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -188,11 +189,13 @@ $result = $conn->query($query);
 
         /* Optional: Different badge colors based on status */
         .badge-top-right.bg-success {
-            background-color: #28a745; /* Green */
+            background-color: #28a745;
+            /* Green */
         }
 
         .badge-top-right.bg-danger {
-            background-color: #dc3545; /* Red */
+            background-color: #dc3545;
+            /* Red */
         }
 
         .card-body {
@@ -398,8 +401,8 @@ $result = $conn->query($query);
                                         alt="<?php echo htmlspecialchars($row['name']); ?>">
                                 <?php endif; ?>
                                 <span class="badge-top-right <?php echo $badgeClass; ?>">
-    <?php echo $badgeLabel; ?>
-</span>
+                                    <?php echo $badgeLabel; ?>
+                                </span>
                             </div>
                             <div class="card-body">
                                 <h5 class="card-title"><?php echo htmlspecialchars($row['name']); ?></h5>
@@ -461,9 +464,13 @@ $result = $conn->query($query);
                             Proceed to Payment
                         </button>
                     </form>
+                    <div class="mt-3 text-danger">
+                        <strong>Note:</strong> The reservation fee is not refundable.
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
     </div>
     <!-- Bootstrap JS and dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

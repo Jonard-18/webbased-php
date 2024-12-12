@@ -2,9 +2,53 @@
 session_start();
 include('../config/database.php');
 include('../includes/header.php');
+
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Student') {
     header("Location: ../auth/Login.php");
     exit();
+}
+
+// Initialize message variables
+$success_message = '';
+$error_message = '';
+
+// Handle reservation cancellation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_reservation'])) {
+    $reservation_id = intval($_POST['reservation_id']);
+
+    // Fetch the reserved quantity and item_id before canceling
+    $fetch_query = "SELECT item_id, reserved_quantity FROM reservations WHERE reservation_id = ? AND user_id = ?";
+    $stmt = $conn->prepare($fetch_query);
+    $stmt->bind_param("ii", $reservation_id, $_SESSION['user_id']);
+    $stmt->execute();
+    $fetch_result = $stmt->get_result();
+    
+    if ($fetch_result->num_rows > 0) {
+        $reservation_data = $fetch_result->fetch_assoc();
+        $item_id = $reservation_data['item_id'];
+        $reserved_quantity = $reservation_data['reserved_quantity'];
+
+        // Update the reservation status to 'Cancelled'
+        $update_query = "UPDATE reservations SET status = 'Cancelled' WHERE reservation_id = ?";
+        $stmt = $conn->prepare($update_query);
+        $stmt->bind_param("i", $reservation_id);
+        
+        if ($stmt->execute()) {
+            // Add the quantity back to the inventory
+            $inventory_update_query = "UPDATE inventory SET quantity = quantity + ? WHERE item_id = ?";
+            $stmt = $conn->prepare($inventory_update_query);
+            $stmt->bind_param("ii", $reserved_quantity, $item_id);
+            if ($stmt->execute()) {
+                $success_message = "Reservation cancelled successfully. Please note that the reservation fee is non-refundable.";
+            } else {
+                $error_message = "Reservation cancelled, but failed to update inventory.";
+            }
+        } else {
+            $error_message = "Error cancelling reservation. Please try again later.";
+        }
+    } else {
+        $error_message = "Reservation not found or you do not have permission to cancel it.";
+    }
 }
 
 // Query to fetch reservations with inventory details and payment status
@@ -14,13 +58,15 @@ $query = "
     FROM reservations r
     LEFT JOIN inventory i ON r.item_id = i.item_id
     LEFT JOIN payments p ON r.reservation_id = p.reservation_id
-    WHERE r.user_id = {$_SESSION['user_id']}
+    WHERE r.user_id = ?
     ORDER BY r.reserved_at DESC
 ";
 
-$result = $conn->query($query);
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $_SESSION['user_id']);
+$stmt->execute();
+$result = $stmt->get_result();
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -113,7 +159,7 @@ $result = $conn->query($query);
         /* Table Styles */
         .table-container {
             background: white;
-            border-radius: var(--border-radius);
+            border-radius: 8px; /* Adjusted from var(--border-radius) */
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             padding: 24px;
             margin-top: 20px;
@@ -227,11 +273,12 @@ $result = $conn->query($query);
                 min-width: auto;
             }
 
-            .table td, .table th {
+            .table td,
+            .table th {
                 min-width: 120px;
             }
 
-            .table td:first-child, 
+            .table td:first-child,
             .table th:first-child {
                 position: sticky;
                 left: 0;
@@ -259,8 +306,13 @@ $result = $conn->query($query);
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
@@ -284,6 +336,21 @@ $result = $conn->query($query);
                 <h1 class="page-title">My Reservations</h1>
             </div>
 
+            <!-- Display Success or Error Messages -->
+            <?php if ($success_message): ?>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <?php echo htmlspecialchars($success_message); ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($error_message): ?>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <?php echo htmlspecialchars($error_message); ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
+
             <div class="table-container">
                 <?php if (!$result): ?>
                     <div class="alert alert-danger" role="alert">
@@ -299,6 +366,7 @@ $result = $conn->query($query);
                                 <th>Reservation Date</th>
                                 <th>Pickup Status</th>
                                 <th>Amount</th>
+                                <th>Action</th> <!-- Added Action column -->
                             </tr>
                         </thead>
                         <tbody>
@@ -321,9 +389,18 @@ $result = $conn->query($query);
                                             $status_class = 'status-cancelled';
                                             break;
                                     }
-                                    
 
-                                    
+                                    // Prepare the action button based on the status
+                                    $action_button = '';
+                                    if ($row['status'] === 'Pending') {
+                                        $action_button = "<button class='btn btn-danger btn-sm' 
+                                                            data-bs-toggle='modal' 
+                                                            data-bs-target='#cancelConfirmationModal' 
+                                                            data-reservation-id='" . htmlspecialchars($row['reservation_id']) . "'>
+                                                            Cancel
+                                                        </button>";
+                                    }
+
                                     echo "<tr>
                                         <td>" . htmlspecialchars($row['name']) . "</td>
                                         <td>" . htmlspecialchars($row['sku']) . "</td>
@@ -332,12 +409,13 @@ $result = $conn->query($query);
                                         <td><span class='status-badge {$status_class}'>" . 
                                             htmlspecialchars($row['status']) . "</span></td>
                                         <td>" . htmlspecialchars($row['amount']) . "</td>
+                                        <td>{$action_button}</td> <!-- Conditional action button -->
                                     </tr>";
                                 }
                             } else {
                                 echo "<tr>
-                                    <td colspan='6' class='empty-state'>
-                                        <i class='bi bi-calendar-x'></i>
+                                    <td colspan='7' class='empty-state'>
+                                        <i class='fas fa-calendar-times'></i>
                                         <p>No reservations found</p>
                                     </td>
                                 </tr>";
@@ -350,8 +428,43 @@ $result = $conn->query($query);
         </div>
     </div>
 
+    <!-- Cancellation Confirmation Modal -->
+    <div class="modal fade" id="cancelConfirmationModal" tabindex="-1" aria-labelledby="cancelConfirmationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" id="cancelReservationForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="cancelConfirmationModalLabel">Confirm Cancellation</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to cancel this reservation? Please note that the reservation fee is non-refundable.
+                        <input type="hidden" name="reservation_id" id="modalReservationId" value="">
+                        <input type="hidden" name="cancel_reservation" value="1">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-danger">Cancel Reservation</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Handle passing reservation ID to the modal form
+        var cancelConfirmationModal = document.getElementById('cancelConfirmationModal');
+        cancelConfirmationModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget; // Button that triggered the modal
+            var reservationId = button.getAttribute('data-reservation-id'); // Extract info from data-* attributes
+
+            // Update the hidden input with the reservation ID
+            var modalReservationIdInput = cancelConfirmationModal.querySelector('#modalReservationId');
+            modalReservationIdInput.value = reservationId;
+        });
+    </script>
 </body>
 
 </html>

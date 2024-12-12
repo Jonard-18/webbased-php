@@ -92,6 +92,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                     $success_message = "Reservation successfully fulfilled. Receipt generated.";
                 } else {
+                    $update_inventory_query = "UPDATE inventory SET quantity = quantity + ? WHERE item_id = ?";
+                    $stmt = $conn->prepare($update_inventory_query);
+                    if (!$stmt) {
+                        throw new Exception("Prepare failed: " . $conn->error);
+                    }
+                    $stmt->bind_param("ii", $reserved_quantity, $item_id);
+                    if (!$stmt->execute()) {
+                        throw new Exception("Execute failed: " . $stmt->error);
+                    }
+                    $stmt->close();
+
+                    $status = 'Cancelled';
                     $success_message = "Reservation successfully cancelled.";
                 }
 
@@ -478,19 +490,21 @@ function format_currency($amount)
 
     <!-- Receipt Modal -->
     <?php if (isset($_SESSION['receipt'])): ?>
-        <div class="modal fade show" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true" style="display: block;">
+        <div class="modal fade show" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true"
+            style="display: block;">
             <div class="modal-dialog modal-md">
                 <div class="modal-content">
                     <div class="modal-header border-0">
                         <!-- Close button redirects to reservation.php to prevent modal from showing again -->
-                        <button type="button" class="btn-close" onclick="window.location.href='reservation.php'" aria-label="Close"></button>
+                        <button type="button" class="btn-close" onclick="window.location.href='reservation.php'"
+                            aria-label="Close"></button>
                     </div>
                     <div class="modal-body p-4">
                         <!-- Logo -->
                         <div class="text-center mb-4">
                             <img src="logo.png" alt="EVSU Logo" class="img-fluid" style="max-width: 120px;">
                         </div>
-                        
+
                         <!-- Receipt Header -->
                         <div class="text-center mb-4">
                             <h4 class="fw-bold mb-1">EVSU-RESERVE</h4>
@@ -521,7 +535,8 @@ function format_currency($amount)
                         </div>
                     </div>
                     <div class="modal-footer border-0 justify-content-center">
-                        <button type="button" class="btn btn-secondary me-2" onclick="window.location.href='reservation.php'">Close</button>
+                        <button type="button" class="btn btn-secondary me-2"
+                            onclick="window.location.href='reservation.php'">Close</button>
                         <button type="button" class="btn btn-primary" onclick="window.print();">
                             <i class="fas fa-print me-2"></i>Print Receipt
                         </button>
@@ -529,9 +544,9 @@ function format_currency($amount)
                 </div>
             </div>
         </div>
-        <?php 
-            // Clear the receipt session after displaying the modal to prevent it from showing again
-            unset($_SESSION['receipt']); 
+        <?php
+        // Clear the receipt session after displaying the modal to prevent it from showing again
+        unset($_SESSION['receipt']);
         ?>
     <?php endif; ?>
     </div>

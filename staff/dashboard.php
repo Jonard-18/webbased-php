@@ -143,33 +143,94 @@ $reservation_stats = getReservationStatistics($conn);
             background-color: #ffffff;
         }
 
-        .card {
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            margin-bottom: 20px;
-        }
+                /* New Card Styles */
+      /* Card Styles */
+.dashboard-card {
+    background: white;
+    border-radius: 15px;
+    padding: 28px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+    border: 1px solid rgba(139, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
 
-        .card-title {
-            font-size: 20px;
-            margin-bottom: 15px;
-        }
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+}
 
-        .stat-item {
-            margin-bottom: 10px;
-        }
+.card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid rgba(139, 0, 0, 0.1);
+}
 
-        .low-stock {
-            background-color: #ffdddd;
-            padding: 5px;
-            border-radius: 5px;
-        }
+.card-header i {
+    font-size: 18px;
+    margin-right: 16px;
+    color: #8B0000;
+    background: rgba(139, 0, 0, 0.1);
+    padding: 12px;
+    border-radius: 12px;
+}
 
-        .zero-stock {
-            background-color: #ff9999;
-            padding: 5px;
-            border-radius: 5px;
-        }
+.card-header h3 {
+    font-size: 17px;
+    margin: 0;
+    color: #333;
+    font-weight: 600;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    margin: 12px 0;
+    border-radius: 12px;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.status-item:hover {
+    transform: translateX(5px);
+}
+
+.status-item.default {
+    background: #f8f9fa;
+    border-left: 4px solid #6c757d;
+}
+
+.status-item.warning {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+}
+
+.status-item.danger {
+    background: #ffe0e0;
+    border-left: 4px solid #dc3545;
+}
+
+.status-item.info {
+    background: #e7f1ff;
+    border-left: 4px solid #0d6efd;
+}
+
+.status-item.success {
+    background: #e8f5e9;
+    border-left: 4px solid #198754;
+}
+
+.status-number {
+    font-weight: 700;
+    font-size: 20px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.5);
+}
     </style>
 </head>
 <body>
@@ -197,23 +258,55 @@ $reservation_stats = getReservationStatistics($conn);
             <h2 class="my-4">Dashboard</h2>
 
             <div class="row">
+                <!-- Inventory Status Card -->
                 <div class="col-md-6">
-                    <div class="card">
-                        <h5 class="card-title">Inventory Statistics</h5>
-                        <div class="stat-item">Total Items: <?php echo $inventory_stats['total_items']; ?></div>
-                        <div class="stat-item low-stock">Low Stock Items: <?php echo $inventory_stats['low_stock_items']; ?></div>
-                        <div class="stat-item zero-stock">Out of Stock Items: <?php echo $inventory_stats['out_of_stock_items']; ?></div>
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-box"></i>
+                            <h3>Inventory Status</h3>
+                        </div>
+                        <div class="status-list">
+                            <div class="status-item default">
+                                <span>Total Items</span>
+                                <span class="status-number"><?php echo $inventory_stats['total_items']; ?></span>
+                            </div>
+                            <div class="status-item warning">
+                                <span>Low Stock Items</span>
+                                <span class="status-number"><?php echo $inventory_stats['low_stock_items']; ?></span>
+                            </div>
+                            <div class="status-item danger">
+                                <span>Out of Stock Items</span>
+                                <span class="status-number"><?php echo $inventory_stats['out_of_stock_items']; ?></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Reservation Status Card -->
                 <div class="col-md-6">
-                    <div class="card">
-                        <h5 class="card-title">Reservation Statistics</h5>
-                        <div class="stat-item">Total Reservations: <?php echo $reservation_stats['total_reservations']; ?></div>
-                        <div class="stat-item">Pending Reservations: <?php echo $reservation_stats['pending_reservations']; ?></div>
-                        <div class="stat-item">Fulfilled Reservations: <?php echo $reservation_stats['fulfilled_reservations']; ?></div>
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-calendar-check"></i>
+                            <h3>Reservation Status</h3>
+                        </div>
+                        <div class="status-list">
+                            <div class="status-item default">
+                                <span>Total Reservations</span>
+                                <span class="status-number"><?php echo $reservation_stats['total_reservations']; ?></span>
+                            </div>
+                            <div class="status-item info">
+                                <span>Pending Reservations</span>
+                                <span class="status-number"><?php echo $reservation_stats['pending_reservations']; ?></span>
+                            </div>
+                            <div class="status-item success">
+                                <span>Fulfilled Reservations</span>
+                                <span class="status-number"><?php echo $reservation_stats['fulfilled_reservations']; ?></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     </div>
 

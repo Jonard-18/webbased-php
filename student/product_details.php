@@ -370,6 +370,10 @@ if (isset($_SESSION['payment_status'])) {
                             Proceed to Payment
                         </button>
                     </form>
+                    <div class="mt-3 text-danger">
+                    <strong>Note:</strong> The reservation fee is not refundable.
+                </div>
+            </div>
                 </div>
             </div>
         </div>
